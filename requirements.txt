@@ -1,0 +1,7 @@
+tkinter
+pillow
+opencv-python
+tkvideo
+bmi
+height
+RPi.GPIO
