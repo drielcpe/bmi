@@ -379,10 +379,11 @@ class BMICalculator(tk.Tk):
         self.window_init()  
         self.gathering_label = tk.Label(self, text="Height received..", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=250)
-        height_label = tk.Label(self, text=f"{height:.2f}m", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
+        height_value = float(height)
+        height_label = tk.Label(self, text=f"{height_value:.2f}m", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
 
         height_label.place(x=390, y=180, anchor="center") 
-        self.height = f"{height:.2f}"
+        self.height = f"{height_value:.2f}"
         if parameter == 1:
             self.after(5000, lambda: self.show_start_screen())
         else:
