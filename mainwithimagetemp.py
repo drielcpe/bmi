@@ -119,7 +119,7 @@ class BMICalculator(tk.Tk):
             self.frames = []
             try:
                 while True:
-                    frame = ImageTk.PhotoImage(self.gif_image.copy().resize((800,400)))
+                    frame = ImageTk.PhotoImage(self.gif_image.copy().resize((800,450)))
                     self.frames.append(frame)
                     self.gif_image.seek(len(self.frames)) 
             except EOFError:
