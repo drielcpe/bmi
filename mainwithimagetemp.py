@@ -7,11 +7,9 @@ from PIL import Image, ImageTk
 import time
 from collections import Counter
 import bmi
-
 import board
 import busio as io
 import adafruit_mlx90614
-
 from time import sleep
 import RPi.GPIO as GPIO
 class DirectoryHelper:
@@ -82,7 +80,6 @@ class BMICalculator(tk.Tk):
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
         
-        # Update canvas size to match window size
         self.canvas = Canvas(
             bg="black",
             height=450,  
@@ -93,12 +90,12 @@ class BMICalculator(tk.Tk):
         )
         self.canvas.place(x=0, y=0)
 
-        image_path = self.relative_to_assets("image_1.png")
+        image_path = self.relative_to_assets("frame.png")
         if image_path.exists():
             self.background_image = PhotoImage(file=str(image_path))
             self.canvas.create_image(
                 400.0,  
-                225.0,  # Center of a 450 height window
+                225.0,  
                 image=self.background_image
             )
         else:
@@ -152,14 +149,14 @@ class BMICalculator(tk.Tk):
             return
 
     def show_start_screen(self):
-        self.show_gif("start11.gif", duration_ms=5000)
+        self.show_gif("introduction.gif", duration_ms=5000)
         btn = ButtonConfig()
         my_label = tk.Label()
         my_label.pack(padx=4, pady=25)
         btn.create_button(10, 2, self, 400, 350, "START", "#1DB954", "#191414", self.show_intro_screen)
 
     def show_intro_screen(self):
-        self.show_gif("start10.gif", duration_ms=5000, callback=self.show_selection_screen)
+        self.show_gif("hopin.gif", duration_ms=5000, callback=self.show_selection_screen)
 
     def show_selection_screen(self):
         self.clear_window()
