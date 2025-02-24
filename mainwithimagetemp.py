@@ -62,6 +62,7 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.height = None
         self.weight = None
+        self.configure(bg="black")
         self.overrideredirect(1)
         self.clear_window()
         self.window_init()
@@ -82,7 +83,7 @@ class BMICalculator(tk.Tk):
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
         self.canvas = Canvas(
             bg="black",
-            height=600,  
+            height=450,  
             width=800,
             bd=0,
             highlightthickness=0,
@@ -90,7 +91,6 @@ class BMICalculator(tk.Tk):
         )
         self.canvas.place(x=0, y=0)
 
-        # Load a background image if available
         image_path = self.relative_to_assets("image_1.png")
         if image_path.exists():
             self.background_image = PhotoImage(file=str(image_path))
