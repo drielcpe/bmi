@@ -62,8 +62,8 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.height = None
         self.weight = None
-
-        self.title("BMI Calculator")
+        self.clear_window()
+        self.window_init()
         self.show_start_screen()
 
     def window_init(self):
@@ -75,7 +75,7 @@ class BMICalculator(tk.Tk):
         window_height = 450
 
         x_position = (screen_width // 2) - (window_width // 2)
-        y_position = (screen_height // 2) - (window_height // 2)
+        y_position = (screen_height // 2) - (window_height // 2)W
 
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
@@ -94,7 +94,7 @@ class BMICalculator(tk.Tk):
         if image_path.exists():
             self.background_image = PhotoImage(file=str(image_path))
             self.canvas.create_image(
-                400.0,  
+                450.0,  
                 200.0,  
                 image=self.background_image
             )
