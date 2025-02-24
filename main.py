@@ -6,10 +6,10 @@ from tkinter import *
 from PIL import Image, ImageTk
 import cv2
 from tkvideo import tkvideo
-import cv2
-from PIL import Image, ImageTk
 import bmi
-import height
+import RPi.GPIO as GPIO
+import time
+from collections import Counter
 
 class DirectoryHelper:
     @staticmethod
@@ -59,7 +59,6 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.height = None
         self.weight = None
-
 
         self.title("BMI Calculator")
         self.show_start_screen()
@@ -135,7 +134,6 @@ class BMICalculator(tk.Tk):
             self.video_label = tk.Label(self, bd=0, relief="flat")  
             self.video_label.place(x=0, y=0, bordermode="outside")
             self.update_video()
-           
         else:
             print(f"Error: {video_path} not found")
         video_duration = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
@@ -147,7 +145,6 @@ class BMICalculator(tk.Tk):
             return 
         if hasattr(self, 'cap') and self.cap is not None and self.cap.isOpened():
             ret, frame = self.cap.read()
-
             if ret:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  
                 frame = Image.fromarray(frame)
@@ -162,7 +159,7 @@ class BMICalculator(tk.Tk):
             print("Video capture not initialized or already stopped.")
 
     def updates_video(self):
-        if self.cap and self.cap.isOpened():
+        if hasattr(self, 'cap') and self.cap and self.cap.isOpened():
             ret, frame = self.cap.read()
             if ret:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -182,8 +179,8 @@ class BMICalculator(tk.Tk):
         self.window_init()
 
         btn = ButtonConfig()
-        btn.create_button(20,2,self,400, 240, "WEIGHT", "#1DB954", "#191414", lambda : self.show_weight_intro(1))
-        btn.create_button(20,2,self,400, 160, "HEIGHT", "#1DB954", "#191414", lambda : self.show_height_intro(1))
+        btn.create_button(20,2,self,400, 240, "WEIGHT", "#1DB954", "#191414", lambda: self.show_weight_intro(1))
+        btn.create_button(20,2,self,400, 160, "HEIGHT", "#1DB954", "#191414", lambda: self.show_height_intro(1))
         btn.create_button(20,2,self,400, 80, "BMI", "#1DB954", "#191414", self.show_bmi_screen)
         btn.create_button(20,2,self,400, 320, "TEMPERATURE", "#1DB954", "#191414", self.show_temperature_intro)
 
@@ -232,7 +229,7 @@ class BMICalculator(tk.Tk):
         btn.create_button(5, 2, self, btn_x + 148, btn_y, "9", "#1DB954", "#191414", lambda: self.number_pressed(9))
         btn.create_button(5, 2, self, btn_x + 222, btn_y, "0", "#1DB954", "#191414", lambda: self.number_pressed(0))
         btn.create_button(5, 5, self, btn_x + 222, btn_y + 105, "C", "#1DB954", "#191414", self.clear_entry)
-        btn.create_button(10, 2, self, btn_x + 550, btn_y + 105, "NEXT", "#1DB954", "#191414",self.save_age)
+        btn.create_button(10, 2, self, btn_x + 550, btn_y + 105, "NEXT", "#1DB954", "#191414", self.save_age)
         btn.create_button(5, 5, self, btn_x + 350, btn_y + 105, "MALE", "#1DB954", "#191414", lambda: self.select_gender('male'))
         btn.create_button(5, 5, self, btn_x + 430, btn_y + 105, "FEMALE", "#1DB954", "#191414", lambda: self.select_gender('female'))
 
@@ -254,50 +251,108 @@ class BMICalculator(tk.Tk):
     def clear_entry(self):
         self.entry_1.delete(0, 'end')
 
-    def show_height_intro(self,parameter):
+    def show_height_intro(self, parameter):
         self.clear_window()
         self.window_init()
+        # Use the intended video file for height intro.
         video_path = self.relative_to_assets("height.mp4")  
         if video_path.exists():
+            print("Playing video:", video_path)
             self.cap = cv2.VideoCapture(str(video_path))
             self.video_label = tk.Label(self, bd=0, relief="flat")  
             self.video_label.place(x=0, y=0, bordermode="outside")
             self.update_video()
-           
         else:
             print(f"Error: {video_path} not found")
         video_duration = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
-        self.after(video_duration * 700, lambda: self.show_height_gathering(parameter))  
+        self.after(video_duration * 700, lambda: self.show_height_gathering(parameter))
 
-    def show_height_gathering(self,parameter):
+    def show_height_gathering(self, parameter):
         self.clear_window()
         self.window_init()
-        self.gathering_label = tk.Label(self, text="Gathering information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
-        self.gathering_label.pack(pady=150)
-        self.animate_text("height")
-        #python to get height
-        imp_height = height.gather_height()
-        self.after(4000, lambda: self.show_height_display(parameter,imp_height))
 
-    def show_weight_gathering(self,parameter):
+        # Reinitialize GPIO here since it might have been cleaned up previously
+        TRIG = 23
+        ECHO = 24
+        SPEED_OF_SOUND = 34300
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(TRIG, GPIO.OUT)
+        GPIO.setup(ECHO, GPIO.IN)
+        GPIO.output(TRIG, False)
+        
+        def measure_distance():
+            GPIO.output(TRIG, True)
+            time.sleep(0.00001)
+            GPIO.output(TRIG, False)
+
+            while GPIO.input(ECHO) == 0:
+                pulse_start = time.time()
+
+            while GPIO.input(ECHO) == 1:
+                pulse_end = time.time()
+
+            pulse_duration = pulse_end - pulse_start
+            distance = (pulse_duration * SPEED_OF_SOUND) / 2
+            return round(distance, 2)
+        
+        self.gathering_label = tk.Label(self, text="Waiting for the sensor to settle", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
+        self.gathering_label.pack(pady=150)
+        time.sleep(2)
+        # Wait until distance is below a threshold
+        while True:
+            distance = measure_distance()
+            if distance <= 200:
+                break
+            print(f"Distance {distance} cm is too large. Retrying...")
+            time.sleep(1)
+
+        self.gathering_label.config(text="Gathering information...")
+        while True:
+            results = []
+            for _ in range(5):
+                distance = measure_distance()
+                results.append(distance)
+                print(f"Measurement {len(results)}: {distance} cm")
+                time.sleep(1)
+
+            integer_results = [int(d) for d in results]
+            counter = Counter(integer_results)
+            valid_integers = [k for k, v in counter.items() if v >= 2]
+
+            if valid_integers:
+                selected_integer = valid_integers[0]
+                filtered_results = [d for d in results if int(d) == selected_integer]
+                average_distance = round(sum(filtered_results) / len(filtered_results), 2)
+                print(f"Average distance for integer {selected_integer}: {average_distance} cm")
+                print(f"height: {213.16 - average_distance} cm")
+                GPIO.cleanup()
+                self.animate_text("height")
+                imp_height = 213.16 - average_distance
+                self.after(4000, lambda: self.show_height_display(parameter, imp_height))
+                break  # exit the loop once valid measurement is obtained
+            else:
+                print("No two measurements share the same integer. Re-gathering...")
+
+    def show_weight_gathering(self, parameter):
         self.clear_window()
         self.window_init()
         self.gathering_label = tk.Label(self, text="Gathering information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
         self.animate_text("weight")
-        #function to get weight
+        # Dummy weight function – replace with sensor logic if needed
         weight = 30
-        self.after(6000, lambda: self.show_weight_display(parameter,weight))
+        self.after(6000, lambda: self.show_weight_display(parameter, weight))
 
-    def animate_text(self,weight_height):
+    def animate_text(self, weight_height):
         if weight_height == "weight":
-            weight_height = "Stay Still"
+            extra_text = "Stay Still"
         elif weight_height == "height":
-            weight_height = "Stand straight"
+            extra_text = "Stand straight"
         texts = [
             "Gathering information.",
             "Gathering information. Please wait...",
-            f"Gathering information. Please wait... {weight_height}..."
+            f"Gathering information. Please wait... {extra_text}..."
         ]
         def update_text(index):
             if index < len(texts):
@@ -305,7 +360,7 @@ class BMICalculator(tk.Tk):
                 self.after(1000, update_text, index + 1)
         update_text(0)
 
-    def show_weight_intro(self,parameter):
+    def show_weight_intro(self, parameter):
         self.clear_window()
         self.window_init()
         video_path = self.relative_to_assets("weight.mp4")
@@ -319,13 +374,13 @@ class BMICalculator(tk.Tk):
         video_duration = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
         self.after(video_duration * 700, lambda: self.show_weight_gathering(parameter))
 
-    def show_weight_display(self,parameter,weight):
+    def show_weight_display(self, parameter, weight):
         self.clear_window()
-        self.window_init()  # Initialize the window
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Weight received..", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=250)
-        self.weight =weight
-        weight_label = tk.Label(self, text=f"{weight}kg", font=("Arial", 50, "bold"), padx=50,pady=15, bg="#1DB954", fg="black")
+        self.weight = weight
+        weight_label = tk.Label(self, text=f"{weight}kg", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         weight_label.place(x=390, y=180, anchor="center") 
 
         if parameter == 1:
@@ -352,38 +407,35 @@ class BMICalculator(tk.Tk):
         self.clear_window()
         self.window_init()
 
-        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}m)²", font=("Arial", 50, "bold"), padx=30,pady=15, bg="#1DB954", fg="black")
+        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}m)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#1DB954", fg="black")
         _label.place(x=400, y=180, anchor="center") 
-        self.after(3000,self.show_bmi_result)
+        self.after(3000, self.show_bmi_result)
 
     def show_bmi_result(self):
         self.clear_window()
         self.window_init()
         bmi_value = float(self.weight) / (float(self.height) ** 2)
-
         print(self.weight)
         print(self.height)
-        bmi_result =bmi.classify_bmi(bmi_value,self.age,self.gender)
+        bmi_result = bmi.classify_bmi(bmi_value, self.age, self.gender)
 
-       
         _label = tk.Label(self, text=f"Your BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         _label.place(x=400, y=180, anchor="center") 
         _label_result = tk.Label(self, text=f"{bmi_result}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         _label_result.place(x=400, y=180, anchor="center")
        
-
         self.after(5000, lambda: self.show_start_screen())
         
-    def show_height_display(self,parameter,height):
+    def show_height_display(self, parameter, height):
         self.clear_window()
         self.window_init()  
         self.gathering_label = tk.Label(self, text="Height received..", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=250)
         height_value = float(height)
-        height_label = tk.Label(self, text=f"{height_value:.2f}m", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
-
+        height_label = tk.Label(self, text=f"{height_value:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         height_label.place(x=390, y=180, anchor="center") 
-        self.height = f"{height_value:.2f}"
+        # Save height in meters for BMI calculation:
+        self.height = f"{height_value / 100:.2f}"
         if parameter == 1:
             self.after(5000, lambda: self.show_start_screen())
         else:
@@ -402,34 +454,29 @@ class BMICalculator(tk.Tk):
         else:
             print(f"Error: {video_path} not found")
         video_duration = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
-        self.after(video_duration * 700,self.show_temp_gathering)  
+        self.after(video_duration * 700, self.show_temp_gathering)  
 
     def show_temp_gathering(self):
         self.clear_window()
         self.window_init()
         self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=190)
-
-        weight_label = tk.Label(self, text="36.6", font=("Arial", 50, "bold"), padx=50,pady=15, bg="#1DB954", fg="black")
-        weight_label.place(x=390, y=180, anchor="center")
+        temp_label = tk.Label(self, text="36.6", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
+        temp_label.place(x=390, y=180, anchor="center")
         self.after(5000, lambda: self.show_start_screen())
 
     def check_enable_next_button(self):
         if self.age is not None and self.gender is not None:
-           
             return True
         else:
             print(self.age)
             print(self.gender)
             return False
-           
 
     def save_age(self):
         try:
             self.age = int(self.entry_1.get())
-           
-            check_if_enabled = self.check_enable_next_button()
-            if check_if_enabled:
+            if self.check_enable_next_button():
                 self.show_height_intro(0)
         except ValueError:
             messagebox.showerror("Invalid input", "Please enter a valid age.")
@@ -437,32 +484,8 @@ class BMICalculator(tk.Tk):
     def select_gender(self, gender):
         self.gender = gender
         print(f"Gender selected: {self.gender}") 
-        check_if_enabled = self.check_enable_next_button()
-        if check_if_enabled:
+        if self.check_enable_next_button():
             self.show_height_intro(0)
-
-    def show_height_screen(self):
-        self.clear_window()
-        label = tk.Label(self, text="Enter your Height (in cm)", font=("Arial", 14), bg='black', fg='white')
-        label.pack(pady=20)
-        self.height_entry = tk.Entry(self)
-        self.height_entry.pack(pady=10)
-        next_button = tk.Button(self, text="Next", command=self.save_height)
-        next_button.pack(pady=10)
-
-    # def save_height(self):
-    #     try:
-    #         self.height = float(self.height_entry.get())
-    #         self.calculate_bmi()
-    #     except ValueError:
-    #         messagebox.showerror("Invalid input", "Please enter a valid height.")
-
-    # def calculate_bmi(self):
-    #     weight = 70
-    #     height_in_meters = self.height / 100
-    #     bmi = weight / (height_in_meters ** 2)
-    #     messagebox.showinfo("Your BMI", f"Your BMI is: {bmi:.2f}\nAge: {self.age}\nGender: {self.gender}")
-    #    # self.after(5000, self.show_age_screen)
 
     def clear_window(self):
         for widget in self.winfo_children():
