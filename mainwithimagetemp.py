@@ -72,7 +72,7 @@ class BMICalculator(tk.Tk):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         window_width = 800
-        window_height = 400
+        window_height = 450
 
         x_position = (screen_width // 2) - (window_width // 2)
         y_position = (screen_height // 2) - (window_height // 2)
@@ -81,7 +81,7 @@ class BMICalculator(tk.Tk):
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
         self.canvas = Canvas(
             bg="black",
-            height=400,  
+            height=450,  
             width=800,
             bd=0,
             highlightthickness=0,
@@ -94,7 +94,7 @@ class BMICalculator(tk.Tk):
         if image_path.exists():
             self.background_image = PhotoImage(file=str(image_path))
             self.canvas.create_image(
-                400.0,  
+                450.0,  
                 200.0,  
                 image=self.background_image
             )
