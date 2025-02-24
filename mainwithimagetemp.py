@@ -62,8 +62,8 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.height = None
         self.weight = None
-
-        self.title("BMI Calculator")
+        self.clear_window()
+        self.window_init()
         self.show_start_screen()
 
     def window_init(self):
@@ -120,9 +120,9 @@ class BMICalculator(tk.Tk):
                 while True:
                     frame = ImageTk.PhotoImage(self.gif_image.copy().resize((800,400)))
                     self.frames.append(frame)
-                    self.gif_image.seek(len(self.frames))  # move to next frame
+                    self.gif_image.seek(len(self.frames)) 
             except EOFError:
-                pass  # end of sequence
+                pass 
 
             self.gif_label = tk.Label(self, bd=0, relief="flat", bg="black")
             self.gif_label.place(x=0, y=0, bordermode="outside")
@@ -132,8 +132,7 @@ class BMICalculator(tk.Tk):
             print(f"Error: {gif_path} not found")
         
         if callback:
-            # Instead of passing keyword arguments directly,
-            # wrap the callback in a lambda that passes the parameters.
+         
             self.after(duration_ms, lambda: callback(**kwargs))
 
 
