@@ -163,10 +163,10 @@ class BMICalculator(tk.Tk):
         self.window_init()
 
         btn = ButtonConfig()
-        btn.create_button(20, 2, self, 400, 270, "WEIGHT", "#1DB954", "#191414", lambda: self.show_weight_intro(1))
-        btn.create_button(20, 2, self, 400, 190, "HEIGHT", "#1DB954", "#191414", lambda: self.show_height_intro(1))
-        btn.create_button(20, 2, self, 400, 110, "BMI", "#1DB954", "#191414", self.show_bmi_screen)
-        btn.create_button(20, 2, self, 400, 350, "TEMPERATURE", "#1DB954", "#191414", self.show_temperature_intro)
+        btn.create_button(20, 2, self, 400, 240, "WEIGHT", "#1DB954", "#191414", lambda: self.show_weight_intro(1))
+        btn.create_button(20, 2, self, 400, 160, "HEIGHT", "#1DB954", "#191414", lambda: self.show_height_intro(1))
+        btn.create_button(20, 2, self, 400, 80, "BMI", "#1DB954", "#191414", self.show_bmi_screen)
+        btn.create_button(20, 2, self, 400, 320, "TEMPERATURE", "#1DB954", "#191414", self.show_temperature_intro)
 
     def show_bmi_screen(self):
         self.clear_window()
@@ -175,7 +175,7 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.canvas.create_text(
             150.0,
-            50.0,
+            30.0,
             anchor="nw",
             text="Please enter your Age and Gender. Then press NEXT",
             fill="#1DB954",
@@ -191,20 +191,12 @@ class BMICalculator(tk.Tk):
             relief="solid",
             justify="center"
         )
-
-        self.error_label = Label(
-        text="",
-        font=("Arial", 12),
-        fg="red",
-        bg="#191414"
-        )
-        self.error_label.place(x=400, y=150)  
-        btn_y = 190
+        btn_y = 160
         btn_x = 120
 
         self.entry_1.place(
             x=200,
-            y=90,
+            y=60,
             width=405.0,
             height=50.0
         )
@@ -242,7 +234,6 @@ class BMICalculator(tk.Tk):
 
     def clear_entry(self):
         self.entry_1.delete(0, 'end')
-        self.age = None
 
     def show_height_intro(self, parameter):
         # Show a GIF for height intro
@@ -415,18 +406,13 @@ class BMICalculator(tk.Tk):
         self.after(5000, lambda: self.show_start_screen())
 
     def check_enable_next_button(self):
-        if self.age is None and self.gender is None:
-            self.error_label.config(text="Please enter a valid age and select gender")
-            return False
-        elif self.age is None:
-            self.error_label.config(text="Please enter a valid age")
-            return False
-        elif self.gender is None:
-            self.error_label.config(text="Please select gender")
-            return False
-        else:
-            self.error_label.config(text="")  # clear any error message
+        if self.age is not None and self.gender is not None:
             return True
+        else:
+            print(self.age)
+            print(self.gender)
+            return False
+
     def save_age(self):
         try:
             self.age = int(self.entry_1.get())
@@ -434,28 +420,13 @@ class BMICalculator(tk.Tk):
             if check_if_enabled:
                 self.show_height_intro(0)
         except ValueError:
-            if not self.gender:
-                self.error_label.config(text="Please select gender")
-            if hasattr(self, 'error_label'):
-                self.error_label.config(text="Please enter a valid age.")
-          
-            
+            messagebox.showerror("Invalid input", "Please enter a valid age.")
 
     def select_gender(self, gender):
-      
-        try:
-            self.gender = gender
-            self.age = int(self.entry_1.get())
-            print(f"Gender selected: {self.gender}") 
-            check_if_enabled = self.check_enable_next_button()
-            if check_if_enabled:
-                self.show_height_intro(0)
-        except ValueError:
-            if not self.gender:
-                self.error_label.config(text="Please select gender")
-            if hasattr(self, 'error_label'):
-                self.error_label.config(text="Please enter a valid age.")
-          
+        self.gender = gender
+        print(f"Gender selected: {self.gender}") 
+        if self.check_enable_next_button():
+            self.show_height_intro(0)
     def clear_window(self):
         # Cancel any pending callbacks if you stored them, e.g.,
         if hasattr(self, 'gif_callback'):
