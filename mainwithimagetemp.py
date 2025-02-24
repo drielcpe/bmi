@@ -79,7 +79,6 @@ class BMICalculator(tk.Tk):
 
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
-        
         self.canvas = Canvas(
             bg="black",
             height=450,  
@@ -94,8 +93,8 @@ class BMICalculator(tk.Tk):
         if image_path.exists():
             self.background_image = PhotoImage(file=str(image_path))
             self.canvas.create_image(
-                400.0,  
-                225.0,  
+                400.0,
+                225.0,
                 image=self.background_image
             )
         else:
@@ -106,11 +105,6 @@ class BMICalculator(tk.Tk):
         return self.directory / path
 
     def show_gif(self, gif_filename, duration_ms, callback=None, **kwargs):
-        """
-        Display a GIF (or image) on the canvas for a certain duration.
-        If the GIF is animated, it will loop automatically.
-        After duration_ms milliseconds, callback() is invoked if provided.
-        """
         self.clear_window()
         self.window_init()
         gif_path = self.relative_to_assets(gif_filename)
@@ -123,7 +117,7 @@ class BMICalculator(tk.Tk):
                     self.frames.append(frame)
                     self.gif_image.seek(len(self.frames)) 
             except EOFError:
-                pass 
+                pass
 
             self.gif_label = tk.Label(self, bd=0, relief="flat", bg="black")
             self.gif_label.place(x=0, y=0, bordermode="outside")
@@ -131,9 +125,7 @@ class BMICalculator(tk.Tk):
             self.animate_gif(0)
         else:
             print(f"Error: {gif_path} not found")
-        
         if callback:
-         
             self.after(duration_ms, lambda: callback(**kwargs))
 
 
@@ -198,7 +190,7 @@ class BMICalculator(tk.Tk):
         fg="red",
         bg="#191414"
         )
-        self.error_label.place(x=450, y=150)  
+        self.error_label.place(x=450, y=150)
         btn_y = 190
         btn_x = 120
 
@@ -207,7 +199,7 @@ class BMICalculator(tk.Tk):
             y=90,
             width=405.0,
             height=50.0
-        )   
+        )
 
         btn = ButtonConfig()
         btn.create_button(4, 2, self, btn_x, btn_y, "7", "#1DB954", "#191414", lambda: self.number_pressed(7))
@@ -226,7 +218,7 @@ class BMICalculator(tk.Tk):
         btn.create_button(4, 5, self, btn_x + 430, btn_y + 105, "FEMALE", "#1DB954", "#191414", lambda: self.select_gender('female'))
 
     def number_pressed(self, number):
-        current_value = self.entry_1.get()  
+        current_value = self.entry_1.get()
         if not str(number).isdigit():
             return
         if current_value != "" and int(current_value + str(number)) > 120:
@@ -234,9 +226,9 @@ class BMICalculator(tk.Tk):
         if current_value == "0" and str(number) == "0":
             return
         new_value = current_value + str(number)
-        if 1 <= int(new_value) <= 120:  
-            self.entry_1.delete(0, 'end')  
-            self.entry_1.insert(0, new_value) 
+        if 1 <= int(new_value) <= 120:
+            self.entry_1.delete(0, 'end')
+            self.entry_1.insert(0, new_value)
         else:
             return
 
@@ -245,7 +237,6 @@ class BMICalculator(tk.Tk):
         self.age = None
 
     def show_height_intro(self, parameter):
-        # Show a GIF for height intro
         self.show_gif("height.gif", duration_ms=5000, callback=self.show_height_gathering, parameter=parameter)
 
     def show_height_gathering(self, parameter):
@@ -262,7 +253,6 @@ class BMICalculator(tk.Tk):
         GPIO.setup(TRIG, GPIO.OUT)
         GPIO.setup(ECHO, GPIO.IN)
         GPIO.output(TRIG, False)
-        
         def measure_distance():
             GPIO.output(TRIG, True)
             time.sleep(0.00001)
@@ -277,9 +267,6 @@ class BMICalculator(tk.Tk):
             pulse_duration = pulse_end - pulse_start
             distance = (pulse_duration * SPEED_OF_SOUND) / 2
             return round(distance, 2)
-        
-    
-        # Wait until distance is below a threshold
         while True:
             distance = measure_distance()
             if distance <= 200:
@@ -310,7 +297,7 @@ class BMICalculator(tk.Tk):
                 self.animate_text("height")
                 imp_height = 213.16 - average_distance
                 self.after(4000, lambda: self.show_height_display(parameter, imp_height))
-                break  
+                break
             else:
                 print("No two measurements share the same integer. Re-gathering...")
 
@@ -344,7 +331,7 @@ class BMICalculator(tk.Tk):
 
     def show_weight_display(self, parameter, weight):
         self.clear_window()
-        self.window_init()  
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=250)
         self.weight = weight
@@ -363,7 +350,7 @@ class BMICalculator(tk.Tk):
         self.clear_window()
         self.window_init()
         _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#1DB954", fg="black")
-        _label.place(x=400, y=180, anchor="center") 
+        _label.place(x=400, y=180, anchor="center")
         self.after(3000, self.show_bmi_result)
 
     def show_bmi_result(self):
@@ -374,14 +361,13 @@ class BMICalculator(tk.Tk):
         print(self.height)
         bmi_result = bmi.classify_bmi(bmi_value, self.age, self.gender)
         _label = tk.Label(self, text=f"Your BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
-        _label.place(x=400, y=180, anchor="center") 
+        _label.place(x=400, y=180, anchor="center")
         _label_result = tk.Label(self, text=f"{bmi_result}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         _label_result.place(x=400, y=180, anchor="center")
         self.after(5000, lambda: self.show_start_screen())
-        
     def show_height_display(self, parameter, height):
         self.clear_window()
-        self.window_init()  
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
         height_value = float(height)
@@ -409,7 +395,6 @@ class BMICalculator(tk.Tk):
         targetTemp = "{:.2f}".format(mlx.object_temperature)
         print("Ambient Temperature:", ambientTemp, "°C")
         print("Target Temperature:", targetTemp,"°C")
-  
         temp_label = tk.Label(self, text=targetTemp+"°C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         temp_label.place(x=390, y=180, anchor="center")
         self.after(5000, lambda: self.show_start_screen())
@@ -425,7 +410,7 @@ class BMICalculator(tk.Tk):
             self.error_label.config(text="Please select gender")
             return False
         else:
-            self.error_label.config(text="")  # clear any error message
+            self.error_label.config(text="")
             return True
     def save_age(self):
         try:
@@ -438,11 +423,8 @@ class BMICalculator(tk.Tk):
                 self.error_label.config(text="Please select gender")
             if hasattr(self, 'error_label'):
                 self.error_label.config(text="Please enter a valid age.")
-          
-            
 
     def select_gender(self, gender):
-      
         try:
             self.gender = gender
             self.age = int(self.entry_1.get())
@@ -455,14 +437,11 @@ class BMICalculator(tk.Tk):
                 self.error_label.config(text="Please select gender")
             if hasattr(self, 'error_label'):
                 self.error_label.config(text="Please enter a valid age.")
-          
     def clear_window(self):
-        # Cancel any pending callbacks if you stored them, e.g.,
         if hasattr(self, 'gif_callback'):
             self.after_cancel(self.gif_callback)
         for widget in self.winfo_children():
             widget.destroy()
 if __name__ == "__main__":
     app = BMICalculator()
-    
     app.mainloop()
