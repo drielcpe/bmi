@@ -69,18 +69,20 @@ class BMICalculator(tk.Tk):
         self.show_start_screen()
 
     def window_init(self):
-        self.geometry("800x400")
+        self.geometry("800x450")
         self.update_idletasks()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         window_width = 800
-        window_height = 400
+        window_height = 450
 
         x_position = (screen_width // 2) - (window_width // 2)
         y_position = (screen_height // 2) - (window_height // 2)
 
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
+        
+        # Update canvas size to match window size
         self.canvas = Canvas(
             bg="black",
             height=450,  
@@ -96,11 +98,12 @@ class BMICalculator(tk.Tk):
             self.background_image = PhotoImage(file=str(image_path))
             self.canvas.create_image(
                 400.0,  
-                200.0,  
+                225.0,  # Center of a 450 height window
                 image=self.background_image
             )
         else:
             print(f"Error: {image_path} not found")
+
 
     def relative_to_assets(self, path: str) -> Path:
         return self.directory / path
