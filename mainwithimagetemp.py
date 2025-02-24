@@ -62,6 +62,7 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.height = None
         self.weight = None
+        self.overrideredirect(1)
         self.clear_window()
         self.window_init()
         self.show_start_screen()
@@ -81,7 +82,7 @@ class BMICalculator(tk.Tk):
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
         self.canvas = Canvas(
             bg="black",
-            height=500,  
+            height=600,  
             width=800,
             bd=0,
             highlightthickness=0,
@@ -435,5 +436,4 @@ class BMICalculator(tk.Tk):
 if __name__ == "__main__":
     app = BMICalculator()
     
-    app.overrideredirect(1)
     app.mainloop()
