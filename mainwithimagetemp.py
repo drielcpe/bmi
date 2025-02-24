@@ -307,7 +307,7 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Gathering weight information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
         self.animate_text("weight")
-        weight = 30
+        weight = 60
         self.after(6000, lambda: self.show_weight_display(parameter, weight))
 
     def animate_text(self, weight_height):
