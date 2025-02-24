@@ -435,5 +435,6 @@ class BMICalculator(tk.Tk):
             widget.destroy()
 if __name__ == "__main__":
     app = BMICalculator()
+    
+    app.overrideredirect(1)
     app.mainloop()
-    app.overrideredirect(True)  
