@@ -75,7 +75,7 @@ class BMICalculator(tk.Tk):
         window_height = 450
 
         x_position = (screen_width // 2) - (window_width // 2)
-        y_position = (screen_height // 2) - (window_height // 2)W
+        y_position = (screen_height // 2) - (window_height // 2)
 
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
