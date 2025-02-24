@@ -118,8 +118,9 @@ class BMICalculator(tk.Tk):
             except EOFError:
                 pass  # end of sequence
 
-            self.gif_label = tk.Label(self, bd=0, relief="flat")
+            self.gif_label = tk.Label(self, bd=0, relief="flat", bg="black")
             self.gif_label.place(x=0, y=0, bordermode="outside")
+
             self.animate_gif(0)
         else:
             print(f"Error: {gif_path} not found")
@@ -142,10 +143,8 @@ class BMICalculator(tk.Tk):
             return
 
     def show_start_screen(self):
-        # Instead of playing video, show a start GIF
-        self.show_gif("start11.gif", duration_ms=5000, callback=self.show_intro_screen)
+        self.show_gif("start11.gif", duration_ms=5000)
         btn = ButtonConfig()
-        # Temporary label for button spacing
         my_label = tk.Label()
         my_label.pack(padx=4, pady=25)
         btn.create_button(10, 2, self, 400, 350, "START", "#1DB954", "#191414", self.show_intro_screen)
