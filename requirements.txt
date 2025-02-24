@@ -1,5 +1,8 @@
-pillow
+Pillow
 opencv-python
 tkvideo
 bmi
 RPi.GPIO
+adafruit-circuitpython-busdevice
+adafruit-circuitpython-mlx90614
+adafruit-circuitpython-board
