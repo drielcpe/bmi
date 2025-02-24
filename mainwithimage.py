@@ -357,7 +357,7 @@ class BMICalculator(tk.Tk):
     def show_bmi_calculation(self):
         self.clear_window()
         self.window_init()
-        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}m)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#1DB954", fg="black")
+        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#1DB954", fg="black")
         _label.place(x=400, y=180, anchor="center") 
         self.after(3000, self.show_bmi_result)
 
@@ -380,7 +380,7 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
         height_value = float(height)
-        height_label = tk.Label(self, text=f"{height_value:.2f}m", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
+        height_label = tk.Label(self, text=f"{height_value:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         height_label.place(x=390, y=180, anchor="center") 
         self.height = f"{height_value:.2f}"
         if parameter == 1:
