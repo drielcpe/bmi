@@ -534,4 +534,5 @@ class BMICalculator(tk.Tk):
 if __name__ == "__main__":
     app = BMICalculator()
     
+    app.overrideredirect(1)
     app.mainloop()

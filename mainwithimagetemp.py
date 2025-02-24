@@ -81,7 +81,7 @@ class BMICalculator(tk.Tk):
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
         self.canvas = Canvas(
             bg="black",
-            height=450,  
+            height=400,  
             width=800,
             bd=0,
             highlightthickness=0,
@@ -94,7 +94,7 @@ class BMICalculator(tk.Tk):
         if image_path.exists():
             self.background_image = PhotoImage(file=str(image_path))
             self.canvas.create_image(
-                450.0,  
+                400.0,  
                 200.0,  
                 image=self.background_image
             )
@@ -149,8 +149,6 @@ class BMICalculator(tk.Tk):
             return
 
     def show_start_screen(self):
-        self.clear_window()
-        self.window_init()
         self.show_gif("start11.gif", duration_ms=5000)
         btn = ButtonConfig()
         my_label = tk.Label()
@@ -277,8 +275,6 @@ class BMICalculator(tk.Tk):
             distance = measure_distance()
             if distance <= 200:
                 break
-            self.gathering_label = tk.Label(self, text="Gathering information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
-            self.gathering_label.pack(pady=150)
             print(f"Distance {distance} cm is too large. Retrying...")
             time.sleep(1)
 
