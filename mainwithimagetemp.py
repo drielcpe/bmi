@@ -198,7 +198,7 @@ class BMICalculator(tk.Tk):
         fg="red",
         bg="#191414"
         )
-        self.error_label.place(x=500, y=150)  
+        self.error_label.place(x=450, y=150)  
         btn_y = 190
         btn_x = 120
 
@@ -222,8 +222,8 @@ class BMICalculator(tk.Tk):
         btn.create_button(4, 2, self, btn_x + 255, btn_y, "0", "#1DB954", "#191414", lambda: self.number_pressed(0))
         btn.create_button(4, 5, self, btn_x + 255, btn_y + 105, "C", "#1DB954", "#191414", self.clear_entry)
         btn.create_button(10, 2, self, btn_x + 600, btn_y + 105, "NEXT", "#1DB954", "#191414", self.save_age)
-        btn.create_button(5, 5, self, btn_x + 350, btn_y + 105, "MALE", "#1DB954", "#191414", lambda: self.select_gender('male'))
-        btn.create_button(5, 5, self, btn_x + 450, btn_y + 105, "FEMALE", "#1DB954", "#191414", lambda: self.select_gender('female'))
+        btn.create_button(4, 5, self, btn_x + 350, btn_y + 105, "MALE", "#1DB954", "#191414", lambda: self.select_gender('male'))
+        btn.create_button(4, 5, self, btn_x + 450, btn_y + 105, "FEMALE", "#1DB954", "#191414", lambda: self.select_gender('female'))
 
     def number_pressed(self, number):
         current_value = self.entry_1.get()  
