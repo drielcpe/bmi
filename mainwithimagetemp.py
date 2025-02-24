@@ -67,7 +67,7 @@ class BMICalculator(tk.Tk):
         self.show_start_screen()
 
     def window_init(self):
-        self.geometry("800x400")
+        self.geometry("800x450")
         self.update_idletasks()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -149,6 +149,8 @@ class BMICalculator(tk.Tk):
             return
 
     def show_start_screen(self):
+        self.clear_window()
+        self.window_init()
         self.show_gif("start11.gif", duration_ms=5000)
         btn = ButtonConfig()
         my_label = tk.Label()
@@ -275,6 +277,8 @@ class BMICalculator(tk.Tk):
             distance = measure_distance()
             if distance <= 200:
                 break
+            self.gathering_label = tk.Label(self, text="Gathering information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
+            self.gathering_label.pack(pady=150)
             print(f"Distance {distance} cm is too large. Retrying...")
             time.sleep(1)
 
