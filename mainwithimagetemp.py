@@ -207,23 +207,23 @@ class BMICalculator(tk.Tk):
             y=90,
             width=405.0,
             height=50.0
-        )
+        )   
 
         btn = ButtonConfig()
         btn.create_button(5, 2, self, btn_x, btn_y, "7", "#1DB954", "#191414", lambda: self.number_pressed(7))
         btn.create_button(5, 2, self, btn_x, btn_y + 70, "4", "#1DB965", "#191414", lambda: self.number_pressed(4))
         btn.create_button(5, 2, self, btn_x, btn_y + 140, "1", "#1DB965", "#191414", lambda: self.number_pressed(1))
-        btn.create_button(5, 2, self, btn_x + 74, btn_y + 140, "2", "#1DB965", "#191414", lambda: self.number_pressed(2))
-        btn.create_button(5, 2, self, btn_x + 74, btn_y + 70, "5", "#1DB954", "#191414", lambda: self.number_pressed(5))
-        btn.create_button(5, 2, self, btn_x + 74, btn_y, "8", "#1DB954", "#191414", lambda: self.number_pressed(8))
-        btn.create_button(5, 2, self, btn_x + 148, btn_y + 140, "3", "#1DB954", "#191414", lambda: self.number_pressed(3))
-        btn.create_button(5, 2, self, btn_x + 148, btn_y + 70, "6", "#1DB954", "#191414", lambda: self.number_pressed(6))
-        btn.create_button(5, 2, self, btn_x + 148, btn_y, "9", "#1DB954", "#191414", lambda: self.number_pressed(9))
-        btn.create_button(5, 2, self, btn_x + 222, btn_y, "0", "#1DB954", "#191414", lambda: self.number_pressed(0))
-        btn.create_button(5, 5, self, btn_x + 222, btn_y + 105, "C", "#1DB954", "#191414", self.clear_entry)
+        btn.create_button(5, 2, self, btn_x + 85, btn_y + 140, "2", "#1DB965", "#191414", lambda: self.number_pressed(2))
+        btn.create_button(5, 2, self, btn_x + 85, btn_y + 70, "5", "#1DB954", "#191414", lambda: self.number_pressed(5))
+        btn.create_button(5, 2, self, btn_x + 85, btn_y, "8", "#1DB954", "#191414", lambda: self.number_pressed(8))
+        btn.create_button(5, 2, self, btn_x + 170, btn_y + 140, "3", "#1DB954", "#191414", lambda: self.number_pressed(3))
+        btn.create_button(5, 2, self, btn_x + 170, btn_y + 70, "6", "#1DB954", "#191414", lambda: self.number_pressed(6))
+        btn.create_button(5, 2, self, btn_x + 170, btn_y, "9", "#1DB954", "#191414", lambda: self.number_pressed(9))
+        btn.create_button(5, 2, self, btn_x + 255, btn_y, "0", "#1DB954", "#191414", lambda: self.number_pressed(0))
+        btn.create_button(5, 5, self, btn_x + 255, btn_y + 105, "C", "#1DB954", "#191414", self.clear_entry)
         btn.create_button(10, 2, self, btn_x + 550, btn_y + 105, "NEXT", "#1DB954", "#191414", self.save_age)
-        btn.create_button(5, 5, self, btn_x + 350, btn_y + 105, "MALE", "#1DB954", "#191414", lambda: self.select_gender('male'))
-        btn.create_button(5, 5, self, btn_x + 430, btn_y + 105, "FEMALE", "#1DB954", "#191414", lambda: self.select_gender('female'))
+        btn.create_button(5, 5, self, btn_x + 400, btn_y + 105, "MALE", "#1DB954", "#191414", lambda: self.select_gender('male'))
+        btn.create_button(5, 5, self, btn_x + 450, btn_y + 105, "FEMALE", "#1DB954", "#191414", lambda: self.select_gender('female'))
 
     def number_pressed(self, number):
         current_value = self.entry_1.get()  
