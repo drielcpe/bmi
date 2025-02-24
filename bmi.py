@@ -1,8 +1,8 @@
 def calculate_bmi(weight, height_cm):
     # Convert height from centimeters to meters
-    height_m = height_cm / 100
+    height_m = float(height_cm) / 100
     # BMI formula: weight (kg) / height (m)^2
-    return round(weight / (height_m ** 2), 2)
+    return round(float(weight) / (height_m ** 2), 2)
 
 def interpret_bmi(bmi, age, sex):
     # BMI interpretation based on age and sex
