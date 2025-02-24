@@ -242,9 +242,15 @@ class BMICalculator(tk.Tk):
     def show_height_gathering(self, parameter):
         self.clear_window()
         self.window_init()
-        self.gathering_label = tk.Label(self, text="Waiting for the sensor to settle", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
-        self.gathering_label.pack(pady=150)
-        time.sleep(2)
+        # self.gathering_label = tk.Label(self, text="Gathering height information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
+        # self.gathering_label.pack(pady=150)
+        # self.animate_text("height")
+        # # For demonstration, set a dummy height value
+        # imp_height = 213.16  
+        # self.after(4000, lambda: self.show_height_display(parameter, imp_height))
+
+
+
         TRIG = 23
         ECHO = 24
         SPEED_OF_SOUND = 34300
@@ -269,7 +275,9 @@ class BMICalculator(tk.Tk):
             distance = (pulse_duration * SPEED_OF_SOUND) / 2
             return round(distance, 2)
         
-    
+        self.gathering_label = tk.Label(self, text="Waiting for the sensor to settle", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
+        self.gathering_label.pack(pady=150)
+        time.sleep(2)
         # Wait until distance is below a threshold
         while True:
             distance = measure_distance()
@@ -301,7 +309,7 @@ class BMICalculator(tk.Tk):
                 self.animate_text("height")
                 imp_height = 213.16 - average_distance
                 self.after(4000, lambda: self.show_height_display(parameter, imp_height))
-                break  
+                break  # exit the loop once valid measurement is obtained
             else:
                 print("No two measurements share the same integer. Re-gathering...")
 
@@ -311,6 +319,7 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Gathering weight information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
         self.animate_text("weight")
+        # For demonstration, set a dummy weight value
         weight = 30
         self.after(6000, lambda: self.show_weight_display(parameter, weight))
 
@@ -393,15 +402,14 @@ class BMICalculator(tk.Tk):
         self.window_init()
         i2c = io.I2C(board.SCL, board.SDA, frequency=100000)
         mlx = adafruit_mlx90614.MLX90614(i2c)
-        self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
-        self.gathering_label.pack(pady=190)
-        sleep(2)
         ambientTemp = "{:.2f}".format(mlx.ambient_temperature)
         targetTemp = "{:.2f}".format(mlx.object_temperature)
         print("Ambient Temperature:", ambientTemp, "°C")
         print("Target Temperature:", targetTemp,"°C")
-  
-        temp_label = tk.Label(self, text=targetTemp+"°C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
+        self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
+        self.gathering_label.pack(pady=190)
+        sleep(2)
+        temp_label = tk.Label(self, text={targetTemp}, font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         temp_label.place(x=390, y=180, anchor="center")
         self.after(5000, lambda: self.show_start_screen())
 
@@ -436,4 +444,3 @@ class BMICalculator(tk.Tk):
 if __name__ == "__main__":
     app = BMICalculator()
     app.mainloop()
-    app.overrideredirect(True)  
