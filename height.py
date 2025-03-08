@@ -65,4 +65,4 @@ def gather_height():
         else:
             print("No two measurements share the same integer. Re-gathering...")
 
-   
+gather_height()
