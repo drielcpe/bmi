@@ -305,55 +305,14 @@ class BMICalculator(tk.Tk):
     def show_weight_gathering(self, parameter):
         self.clear_window()
         self.window_init()
-        GPIO.setmode(GPIO.BCM)
-
-        try:
-            hx = HX711(dout_pin=21, pd_sck_pin=20, channel='A', gain=64)
-            hx.reset()
-
-            scaling_factor = 0.001  # Example scaling factor for conversion to kilograms
-
-            consecutive_count = 0
-            last_value = None
-            measurements = []
-
-            while len(measurements) < 5: 
-                raw_data = hx.get_raw_data_mean()
-                weight_in_kg = raw_data * scaling_factor
-                if last_value is not None and weight_in_kg == last_value:
-                    consecutive_count += 1
-                else:
-                    consecutive_count = 1  
-                
-                measurements.append(weight_in_kg)
-
-                if consecutive_count >= 5:
-                    print(f"2 consecutive values are the same: {weight_in_kg} kg.")
-                    break  # Exit the loop if we have 2 consistent readings
-                
-                # Small delay to prevent overwhelming the HX711 with requests too quickly
-                time.sleep(0.1)
-
-            # If no consistent readings were found, raise a warning
-            if consecutive_count < 2:
-                print("Warning: Less than 2 consecutive equal readings found. Average may be inaccurate.")
-
-            # Calculate the average of the measurements (in kg)
-            average_weight = sum(measurements) / len(measurements)  # Mean of all the measurements
-            print(f"Average weight based on 5 readings: {average_weight} kg")
-
-        except Exception as e:
-            print(f"Error during weight gathering: {e}")
-
-        finally:
-            GPIO.cleanup()
-
-        # Update UI with weight gathering message
+        GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
+        hx = HX711(dout_pin=21, pd_sck_pin=20)  # create an object
+        print(hx.get_raw_data_mean())  # get raw data reading from hx711
+        GPIO.cleanup()
         self.gathering_label = tk.Label(self, text="Gathering weight information...", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
-
         self.animate_text("weight")
-        weight = average_weight  # Use the calculated average weight
+        weight = 60
         self.after(6000, lambda: self.show_weight_display(parameter, weight))
 
     def animate_text(self, weight_height):
