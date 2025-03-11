@@ -8,8 +8,9 @@ import math
 i2c = io.I2C(board.SCL, board.SDA, frequency=100000)
 mlx = adafruit_mlx90614.MLX90614(i2c)
 
-# Define emissivity (for human skin)
-EMISSIVITY = 0.97  # Adjust between 0.95 - 0.98
+# Set emissivity for human skin
+EMISSIVITY = 0.98  # Try increasing this
+OFFSET = 2.0       # Manual correction if needed
 
 def celsius_to_kelvin(temp_c):
     """Convert Celsius to Kelvin."""
@@ -39,7 +40,11 @@ object_temp_c = mlx.object_temperature
 # Apply emissivity correction
 corrected_temp_c = correct_temperature(object_temp_c, ambient_temp_c, EMISSIVITY)
 
+# Apply manual offset correction if needed
+final_temp_c = corrected_temp_c + OFFSET
+
 # Print results
 print(f"Ambient Temperature: {ambient_temp_c:.2f} °C")
 print(f"Measured Object Temperature: {object_temp_c:.2f} °C")
-print(f"Corrected Object Temperature: {corrected_temp_c:.2f} °")
+print(f"Corrected Object Temperature: {corrected_temp_c:.2f} °C")
+print(f"Final Adjusted Temperature: {final_temp_c:.2f} °C (with offset)")
