@@ -31,17 +31,13 @@ def gather_height():
     print("Waiting for the sensor to settle")
     time.sleep(2)
 
-    while True:
-        distance = measure_distance()
-        if distance <= 200:
-            break
-        print(f"Distance {distance} cm is too large. Retrying...")
-        time.sleep(1)  
 
     while True:
         results = []
         for _ in range(5):
             distance = measure_distance()
+            if distance >= 214:
+                continue
             results.append(distance)
             print(f"Measurement {len(results)}: {distance} cm")
             time.sleep(1)
