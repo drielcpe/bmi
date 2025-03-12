@@ -10,3 +10,5 @@ ambientTemp = "{:.2f}".format(mlx.ambient_temperature)
 targetTemp = "{:.2f}".format(mlx.object_temperature)
 print("Ambient Temperature:", ambientTemp, "°C")
 print("Target Temperature:", targetTemp,"°C")
+newtargetTemp = -1.14 * mlx.object_temperature + 70.92
+print("Target Temperature with formula: {:.2f}".format(newtargetTemp))
