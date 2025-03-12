@@ -442,8 +442,8 @@ class BMICalculator(tk.Tk):
         targetTemp = "{:.2f}".format(mlx.object_temperature)
         print("Ambient Temperature:", ambientTemp, "°C")
         newtargetTemp = 0.9844 * mlx.object_temperature + 3.8967
-        print("Target Temperature:", newtargetTemp,"°C")
-        temp_label = tk.Label(self, text=newtargetTemp+"°C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
+        print("Target Temperature: {:.2f} °C".format(newtargetTemp))
+        temp_label = tk.Label(self, text="{:.2f} °C".format(newtargetTemp), font=("Arial", 50, "bold"), padx=50, pady=15, bg="#1DB954", fg="black")
         temp_label.place(x=390, y=180, anchor="center")
         self.after(5000, lambda: self.show_start_screen())
 
