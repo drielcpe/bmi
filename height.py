@@ -3,8 +3,8 @@ import time
 from collections import Counter
 
 def gather_height():
-    TRIG = 4
-    ECHO = 17
+    TRIG = 23
+    ECHO = 24
     SPEED_OF_SOUND = 34300
 
     GPIO.setmode(GPIO.BCM)
