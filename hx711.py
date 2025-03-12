@@ -551,6 +551,6 @@ class HX711:
 # Main execution
 if __name__ == '__main__':
     GPIO.setmode(GPIO.BCM)  # Set GPIO pin mode to BCM numbering
-    hx = HX711(dout_pin=21, pd_sck_pin=20)  # Create an object
+    hx = HX711(dout_pin=5, pd_sck_pin=6)  # Create an object
     print(hx.get_raw_data_mean())  # Get raw data reading from HX711
     GPIO.cleanup()  # Clean up GPIO
