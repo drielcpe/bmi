@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 from collections import Counter
+
 def gather_height():
     TRIG = 4
     ECHO = 17
@@ -31,7 +32,6 @@ def gather_height():
     print("Waiting for the sensor to settle")
     time.sleep(2)
 
-
     while True:
         results = []
         for _ in range(5):
@@ -53,12 +53,19 @@ def gather_height():
             filtered_results = [d for d in results if int(d) == selected_integer]
             average_distance = round(sum(filtered_results) / len(filtered_results), 2)
             print(f"Average distance for integer {selected_integer}: {average_distance} cm")
-            print(f"height: {213.16-average_distance} cm")
-            GPIO.cleanup()
-            return {
-                "height":  f"213.16-{average_distance}"
-            }
+
+            # Check if the average distance is within the valid range (40 cm to 200 cm)
+            if 40 <= average_distance <= 200:
+                height = 213.16 - average_distance
+                print(f"Height: {height} cm")
+                GPIO.cleanup()
+                return {
+                    "height": f"{height} cm"
+                }
+            else:
+                print("Average distance is outside the valid range (40 cm to 200 cm). Re-gathering...")
         else:
             print("No two measurements share the same integer. Re-gathering...")
 
-gather_height()
+# Call the function
+#gather_height()

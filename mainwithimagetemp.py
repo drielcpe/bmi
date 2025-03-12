@@ -268,18 +268,18 @@ class BMICalculator(tk.Tk):
             pulse_duration = pulse_end - pulse_start
             distance = (pulse_duration * SPEED_OF_SOUND) / 2
             return round(distance, 2)
-        while True:
-            distance = measure_distance()
-            if distance <= 200:
-                break
-            print(f"Distance {distance} cm is too large. Retrying...")
-            time.sleep(1)
+        print("Waiting for the sensor to settle")
+        time.sleep(1)
+
+        
 
         self.gathering_label.config(text="Gathering information...")
         while True:
             results = []
             for _ in range(5):
                 distance = measure_distance()
+                if distance >= 214:
+                    continue
                 results.append(distance)
                 print(f"Measurement {len(results)}: {distance} cm")
                 time.sleep(1)
@@ -293,12 +293,14 @@ class BMICalculator(tk.Tk):
                 filtered_results = [d for d in results if int(d) == selected_integer]
                 average_distance = round(sum(filtered_results) / len(filtered_results), 2)
                 print(f"Average distance for integer {selected_integer}: {average_distance} cm")
-                print(f"height: {213.16 - average_distance} cm")
-                GPIO.cleanup()
-                self.animate_text("height")
-                imp_height = 213.16 - average_distance
-                self.after(4000, lambda: self.show_height_display(parameter, imp_height))
-                break
+
+                if 40 <= average_distance <= 200:
+                    print(f"height: {213.16 - average_distance} cm")
+                    GPIO.cleanup()
+                    self.animate_text("height")
+                    imp_height = 213.16 - average_distance
+                    self.after(4000, lambda: self.show_height_display(parameter, imp_height))
+                    break
             else:
                 print("No two measurements share the same integer. Re-gathering...")
 
