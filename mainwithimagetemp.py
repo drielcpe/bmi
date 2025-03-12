@@ -246,8 +246,8 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Waiting for the sensor to settle", font=("Arial", 20, "bold"), bg="#1DB954", fg="black")
         self.gathering_label.pack(pady=150)
         time.sleep(2)
-        TRIG = 4
-        ECHO = 17
+        TRIG = 23
+        ECHO = 24
         SPEED_OF_SOUND = 34300
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
