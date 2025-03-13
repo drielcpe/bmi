@@ -15,6 +15,9 @@ import busio as io
 import adafruit_mlx90614
 from hx711 import HX711
 
+GPIO.setmode(GPIO.BCM)  # Use BCM pin numbering
+GPIO.setwarnings(False)
+
 class DirectoryHelper:
     @staticmethod
     def get_current_working_directory():
@@ -262,13 +265,9 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
-        # Hardcoded height value
-        height = 175.0  # Example height in cm
         TRIG = 23
         ECHO = 24
         SPEED_OF_SOUND = 34300
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
         GPIO.setup(TRIG, GPIO.OUT)
         GPIO.setup(ECHO, GPIO.IN)
         GPIO.output(TRIG, False)
