@@ -264,8 +264,58 @@ class BMICalculator(tk.Tk):
         self.gathering_label.pack(pady=150)
         # Hardcoded height value
         height = 175.0  # Example height in cm
-        self.height = f"{height:.2f}"
-        self.after(2000, lambda: self.show_height_display(parameter, height))
+        TRIG = 23
+        ECHO = 24
+        SPEED_OF_SOUND = 34300
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(TRIG, GPIO.OUT)
+        GPIO.setup(ECHO, GPIO.IN)
+        GPIO.output(TRIG, False)
+
+        def measure_distance():
+            GPIO.output(TRIG, True)
+            time.sleep(0.00001)
+            GPIO.output(TRIG, False)
+
+            while GPIO.input(ECHO) == 0:
+                pulse_start = time.time()
+
+            while GPIO.input(ECHO) == 1:
+                pulse_end = time.time()
+
+            pulse_duration = pulse_end - pulse_start
+            distance = (pulse_duration * SPEED_OF_SOUND) / 2
+            return round(distance, 2)
+
+        def gather_data():
+            results = []
+            for _ in range(5):
+                distance = measure_distance()
+                if distance >= 214:
+                    continue
+                results.append(distance)
+                time.sleep(0.00001)
+
+            integer_results = [int(d) for d in results]
+            counter = Counter(integer_results)
+            valid_integers = [k for k, v in counter.items() if v >= 2]
+
+            if valid_integers:
+                selected_integer = valid_integers[0]
+                filtered_results = [d for d in results if int(d) == selected_integer]
+                average_distance = round(sum(filtered_results) / len(filtered_results), 2)
+                if 40 <= average_distance <= 200:
+                    height = 214.16 - average_distance
+                    self.height = f"{height:.2f}"
+                    self.after(2000, lambda: self.show_height_display(parameter, height))
+                    GPIO.cleanup()
+            else:
+                print("No valid measurement found. Retrying...")
+                self.after(1000, gather_data) 
+        threading.Thread(target=gather_data).start()
+        #self.height = f"{height:.2f}"
+        #self.after(2000, lambda: self.show_height_display(parameter, height))
 
     def show_weight_gathering(self, parameter):
         self.clear_canvas()
