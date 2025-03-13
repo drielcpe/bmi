@@ -311,7 +311,7 @@ class BMICalculator(tk.Tk):
                 filtered_results = [d for d in results if int(d) == selected_integer]
                 average_distance = round(sum(filtered_results) / len(filtered_results), 2)
                 if 40 <= average_distance <= 200:
-                    height = 213 - average_distance
+                    height = 213 - (average_distance * .01)
                     self.height = f"{height:.2f}"
                     self.after(2000, lambda: self.show_height_display(parameter, height))
                     #GPIO.cleanup()
@@ -354,7 +354,8 @@ class BMICalculator(tk.Tk):
         self.clear_canvas()
         # Display background image
         self.canvas.create_image(400, 225, image=self.background_image)
-        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
+
+        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}m)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
         _label.place(x=400, y=180, anchor="center")
         self.after(2000, self.show_bmi_result)
 
