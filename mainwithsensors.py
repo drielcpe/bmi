@@ -442,8 +442,8 @@ class BMICalculator(tk.Tk):
 
 if __name__ == "__main__":
     hx = HX711(5, 6)
-    hx.set_reading_format("LSB", "MSB")
-    referenceUnit = 20.26
+    hx.set_reading_format("MSB", "MSB")
+    referenceUnit = 20.22
     hx.set_reference_unit(referenceUnit)
     hx.reset()
     hx.tare()
