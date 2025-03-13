@@ -321,6 +321,7 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
+        GPIO.setmode(GPIO.BCM)
         weight = hx.get_weight(5)
         # Hardcoded weight value
         #weight = 70.5  # Example weight in kg
