@@ -90,7 +90,7 @@ class BMICalculator(tk.Tk):
 
     def preload_assets(self):
         # Preload all GIFs and images
-        self.background_image = self.load_image("frame.jpg")
+        self.background_image = self.load_image("frame.png")
         self.intro_gif_frames = self.load_gif("introduction.gif")
         self.height_gif_frames = self.load_gif("height.gif")
         self.weight_gif_frames = self.load_gif("weight.gif")
@@ -142,17 +142,21 @@ class BMICalculator(tk.Tk):
 
     def show_start_screen(self):
         self.clear_canvas()
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
         self.show_gif(self.intro_gif_frames, duration_ms=3000)
         btn = ButtonConfig()
-        btn.create_button(10, 2, self, 400, 350, "START", "#A1E3F9", "#191414", self.show_selection_screen)
+        btn.create_button(10, 2, self, 400, 350, "START", "#211C84", "#ffffff", self.show_selection_screen)
 
     def show_selection_screen(self):
         self.clear_canvas()
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
         btn = ButtonConfig()
-        btn.create_button(20, 2, self, 400, 270, "WEIGHT", "#A1E3F9", "#191414", lambda: self.show_weight_intro(1))
-        btn.create_button(20, 2, self, 400, 190, "HEIGHT", "#A1E3F9", "#191414", lambda: self.show_height_intro(1))
-        btn.create_button(20, 2, self, 400, 110, "BMI", "#A1E3F9", "#191414", self.show_bmi_screen)
-        btn.create_button(20, 2, self, 400, 350, "TEMPERATURE", "#A1E3F9", "#191414", self.show_temperature_intro)
+        btn.create_button(20, 2, self, 400, 270, "WEIGHT", "#211C84", "#ffffff", lambda: self.show_weight_intro(1))
+        btn.create_button(20, 2, self, 400, 190, "HEIGHT", "#211C84", "#ffffff", lambda: self.show_height_intro(1))
+        btn.create_button(20, 2, self, 400, 110, "BMI", "#211C84", "#ffffff", self.show_bmi_screen)
+        btn.create_button(20, 2, self, 400, 350, "TEMPERATURE", "#211C84", "#ffffff", self.show_temperature_intro)
 
     def clear_canvas(self):
         # Clear all widgets from the canvas
@@ -165,6 +169,8 @@ class BMICalculator(tk.Tk):
 
     def show_bmi_screen(self):
         self.clear_canvas()
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
         self.age = None
         self.gender = None
         self.canvas.create_text(
@@ -177,8 +183,8 @@ class BMICalculator(tk.Tk):
         )
         self.entry_1 = Entry(
             bd=0,
-            bg="#191414",
-            fg="#A1E3F9",
+            bg="#ffffff",
+            fg="#211C84",
             highlightthickness=0,
             font=("Arial", 20, "bold"),
             borderwidth=3,
@@ -190,7 +196,7 @@ class BMICalculator(tk.Tk):
         text="",
         font=("Arial", 12),
         fg="red",
-        bg="#191414"
+        bg="#ffffff"
         )
         self.error_label.place(x=450, y=150)
         btn_y = 190
@@ -204,20 +210,20 @@ class BMICalculator(tk.Tk):
         )
 
         btn = ButtonConfig()
-        btn.create_button(4, 2, self, btn_x, btn_y, "7", "#A1E3F9", "#191414", lambda: self.number_pressed(7))
-        btn.create_button(4, 2, self, btn_x, btn_y + 70, "4", "#A1E3F9", "#191414", lambda: self.number_pressed(4))
-        btn.create_button(4, 2, self, btn_x, btn_y + 140, "1", "#A1E3F9", "#191414", lambda: self.number_pressed(1))
-        btn.create_button(4, 2, self, btn_x + 85, btn_y + 140, "2", "#A1E3F9", "#191414", lambda: self.number_pressed(2))
-        btn.create_button(4, 2, self, btn_x + 85, btn_y + 70, "5", "#A1E3F9", "#191414", lambda: self.number_pressed(5))
-        btn.create_button(4, 2, self, btn_x + 85, btn_y, "8", "#A1E3F9", "#191414", lambda: self.number_pressed(8))
-        btn.create_button(4, 2, self, btn_x + 170, btn_y + 140, "3", "#A1E3F9", "#191414", lambda: self.number_pressed(3))
-        btn.create_button(4, 2, self, btn_x + 170, btn_y + 70, "6", "#A1E3F9", "#191414", lambda: self.number_pressed(6))
-        btn.create_button(4, 2, self, btn_x + 170, btn_y, "9", "#A1E3F9", "#191414", lambda: self.number_pressed(9))
-        btn.create_button(4, 2, self, btn_x + 255, btn_y, "0", "#A1E3F9", "#191414", lambda: self.number_pressed(0))
-        btn.create_button(4, 5, self, btn_x + 255, btn_y + 105, "C", "#A1E3F9", "#191414", self.clear_entry)
-        btn.create_button(10, 2, self, btn_x + 590, btn_y + 205, "NEXT", "#A1E3F9", "#191414", self.save_age)
-        btn.create_button(7, 5, self, btn_x + 390, btn_y + 75, "MALE", "#A1E3F9", "#191414", lambda: self.select_gender('male'))
-        btn.create_button(7, 5, self, btn_x + 490, btn_y + 75, "FEMALE", "#A1E3F9", "#191414", lambda: self.select_gender('female'))
+        btn.create_button(4, 2, self, btn_x, btn_y, "7", "#211C84", "#ffffff", lambda: self.number_pressed(7))
+        btn.create_button(4, 2, self, btn_x, btn_y + 70, "4", "#211C84", "#ffffff", lambda: self.number_pressed(4))
+        btn.create_button(4, 2, self, btn_x, btn_y + 140, "1", "#211C84", "#ffffff", lambda: self.number_pressed(1))
+        btn.create_button(4, 2, self, btn_x + 85, btn_y + 140, "2", "#211C84", "#ffffff", lambda: self.number_pressed(2))
+        btn.create_button(4, 2, self, btn_x + 85, btn_y + 70, "5", "#211C84", "#ffffff", lambda: self.number_pressed(5))
+        btn.create_button(4, 2, self, btn_x + 85, btn_y, "8", "#211C84", "#ffffff", lambda: self.number_pressed(8))
+        btn.create_button(4, 2, self, btn_x + 170, btn_y + 140, "3", "#211C84", "#ffffff", lambda: self.number_pressed(3))
+        btn.create_button(4, 2, self, btn_x + 170, btn_y + 70, "6", "#211C84", "#ffffff", lambda: self.number_pressed(6))
+        btn.create_button(4, 2, self, btn_x + 170, btn_y, "9", "#211C84", "#ffffff", lambda: self.number_pressed(9))
+        btn.create_button(4, 2, self, btn_x + 255, btn_y, "0", "#211C84", "#ffffff", lambda: self.number_pressed(0))
+        btn.create_button(4, 5, self, btn_x + 255, btn_y + 105, "C", "#211C84", "#ffffff", self.clear_entry)
+        btn.create_button(10, 2, self, btn_x + 590, btn_y + 205, "NEXT", "#211C84", "#ffffff", self.save_age)
+        btn.create_button(7, 5, self, btn_x + 390, btn_y + 75, "MALE", "#211C84", "#ffffff", lambda: self.select_gender('male'))
+        btn.create_button(7, 5, self, btn_x + 490, btn_y + 75, "FEMALE", "#211C84", "#ffffff", lambda: self.select_gender('female'))
 
     def number_pressed(self, number):
         current_value = self.entry_1.get()
@@ -243,7 +249,9 @@ class BMICalculator(tk.Tk):
 
     def show_height_gathering(self, parameter):
         self.clear_canvas()
-        self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
+        self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         # Hardcoded height value
         height = 175.0  # Example height in cm
@@ -252,7 +260,9 @@ class BMICalculator(tk.Tk):
 
     def show_weight_gathering(self, parameter):
         self.clear_canvas()
-        self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
+        self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         # Hardcoded weight value
         weight = 70.5  # Example weight in kg
@@ -264,53 +274,63 @@ class BMICalculator(tk.Tk):
 
     def show_weight_display(self, parameter, weight):
         self.clear_canvas()
-        self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
+        self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=250)
-        weight_label = tk.Label(self, text=f"{weight}kg", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
+        weight_label = tk.Label(self, text=f"{weight}kg", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         weight_label.place(x=390, y=180, anchor="center") 
         if parameter == 1:
             self.after(3000, lambda: self.show_start_screen())
         else:
             btn = ButtonConfig()
-            btn.create_button(20, 2, self, 390, 300, "Next", "#A1E3F9", "#191414", self.show_bmi_calculation)
+            btn.create_button(20, 2, self, 390, 300, "Next", "#211C84", "#ffffff", self.show_bmi_calculation)
 
     def show_bmi_calculation(self):
         self.clear_canvas()
-        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#A1E3F9", fg="black")
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
+        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
         _label.place(x=400, y=180, anchor="center")
         self.after(2000, self.show_bmi_result)
 
     def show_bmi_result(self):
         self.clear_canvas()
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
         bmi_value, status = bmi.bmi(self.age, self.gender, float(self.height), float(self.weight))
-        _label = tk.Label(self, text=f"Your BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
-        _label.place(x=400, y=180, anchor="center")
-        _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
-        _label_result.place(x=400, y=180, anchor="center")
+        _label = tk.Label(self, text=f"BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
+        _label.place(x=350, y=180, anchor="center")
+        _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
+        _label_result.place(x=350, y=180, anchor="center")
         self.after(3000, lambda: self.show_start_screen())
 
     def show_height_display(self, parameter, height):
         self.clear_canvas()
-        self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
+        self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
-        height_label = tk.Label(self, text=f"{height:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
+        height_label = tk.Label(self, text=f"{height:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         height_label.place(x=390, y=180, anchor="center") 
         if parameter == 1:
             self.after(3000, lambda: self.show_start_screen())
         else:
             btn = ButtonConfig()
-            btn.create_button(20, 2, self, 390, 300, "Next", "#A1E3F9", "#191414", lambda: self.show_weight_intro(parameter))
+            btn.create_button(20, 2, self, 390, 300, "Next", "#211C84", "#ffffff", lambda: self.show_weight_intro(parameter))
 
     def show_temperature_intro(self):
         self.show_gif(self.temp_gif_frames, duration_ms=3000, callback=self.show_temp_gathering)
 
     def show_temp_gathering(self):
         self.clear_canvas()
+        # Display background image
+        self.canvas.create_image(400, 225, image=self.background_image)
         # Hardcoded temperature value
         temperature = 36.5  # Example temperature in °C
-        self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=190)
-        temp_label = tk.Label(self, text=f"{temperature:.2f} °C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
+        temp_label = tk.Label(self, text=f"{temperature:.2f} °C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         temp_label.place(x=390, y=180, anchor="center")
         self.after(3000, lambda: self.show_start_screen())
 
