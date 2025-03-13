@@ -61,8 +61,11 @@ class BMICalculator(tk.Tk):
         self.overrideredirect(1)
         self.window_init()
         self.preload_assets()
+        self.hide_mouse_cursor() 
         self.show_start_screen()
-
+    def hide_mouse_cursor(self):
+        # Hide the mouse cursor
+        self.config(cursor="none")  
     def window_init(self):
         self.geometry("800x450")
         self.update_idletasks()
