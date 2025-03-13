@@ -248,7 +248,7 @@ class BMICalculator(tk.Tk):
         self.age = None
 
     def show_height_intro(self, parameter):
-        self.show_gif(self.height_gif_frames, duration_ms=3000, callback=self.show_height_gathering, parameter=parameter)
+        self.show_gif(self.height_gif_frames, duration_ms=4500, callback=self.show_height_gathering, parameter=parameter)
 
     def show_height_gathering(self, parameter):
         self.clear_canvas()
