@@ -146,7 +146,7 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.show_gif(self.intro_gif_frames, duration_ms=3000)
         btn = ButtonConfig()
-        btn.create_button(10, 2, self, 400, 350, "START", "#211C84", "#ffffff", self.show_selection_screen)
+        btn.create_button(10, 2, self, 400, 320, "START", "#211C84", "#ffffff", self.show_selection_screen)
 
     def show_selection_screen(self):
         self.clear_canvas()
@@ -270,7 +270,7 @@ class BMICalculator(tk.Tk):
         self.after(2000, lambda: self.show_weight_display(parameter, weight))
 
     def show_weight_intro(self, parameter):
-        self.show_gif(self.weight_gif_frames, duration_ms=3000, callback=self.show_weight_gathering, parameter=parameter)
+        self.show_gif(self.weight_gif_frames, duration_ms=5000, callback=self.show_weight_gathering, parameter=parameter)
 
     def show_weight_display(self, parameter, weight):
         self.clear_canvas()
@@ -299,10 +299,10 @@ class BMICalculator(tk.Tk):
         # Display background image
         self.canvas.create_image(400, 225, image=self.background_image)
         bmi_value, status = bmi.bmi(self.age, self.gender, float(self.height), float(self.weight))
-        _label = tk.Label(self, text=f"BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
+        _label = tk.Label(self, text=f"BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         _label.place(x=350, y=180, anchor="center")
         _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
-        _label_result.place(x=350, y=180, anchor="center")
+        _label_result.place(x=350, y=300, anchor="center")
         self.after(3000, lambda: self.show_start_screen())
 
     def show_height_display(self, parameter, height):
@@ -320,7 +320,7 @@ class BMICalculator(tk.Tk):
             btn.create_button(20, 2, self, 390, 300, "Next", "#211C84", "#ffffff", lambda: self.show_weight_intro(parameter))
 
     def show_temperature_intro(self):
-        self.show_gif(self.temp_gif_frames, duration_ms=3000, callback=self.show_temp_gathering)
+        self.show_gif(self.temp_gif_frames, duration_ms=4000, callback=self.show_temp_gathering)
 
     def show_temp_gathering(self):
         self.clear_canvas()

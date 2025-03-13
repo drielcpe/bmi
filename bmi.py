@@ -12,23 +12,23 @@ def classify_bmi(bmi, sex, age):
     if age >= 2 and age < 20:  # Teenagers (13-19)
         if sex.lower() == "male":
             if bmi < 17.5:
-                return "Underweight (Equivalent to Adult BMI < 18.5)"
+                return "Underweight"
             elif 17.5 <= bmi < 23.0:
-                return "Healthy Weight (Equivalent to Adult BMI 18.5 – 24.9)"
+                return "Healthy Weight"
             elif 23.0 <= bmi < 27.0:
-                return "Overweight (Equivalent to Adult BMI 25 – 29.9)"
+                return "Overweight"
             else:
-                return "Obese (Equivalent to Adult BMI ≥ 30)"
+                return "Obese"
         
         elif sex.lower() == "female":
             if bmi < 17.0:
-                return "Underweight (Equivalent to Adult BMI < 18.5)"
+                return "Underweight"
             elif 17.0 <= bmi < 24.0:
-                return "Healthy Weight (Equivalent to Adult BMI 18.5 – 24.9)"
+                return "Healthy Weight"
             elif 24.0 <= bmi < 28.0:
-                return "Overweight (Equivalent to Adult BMI 25 – 29.9)"
+                return "Overweight"
             else:
-                return "Obese (Equivalent to Adult BMI ≥ 30)"
+                return "Obese"
         
         else:
             return "Invalid input: Please enter 'male' or 'female'."
