@@ -325,7 +325,7 @@ class BMICalculator(tk.Tk):
         # Hardcoded weight value
         #weight = 70.5  # Example weight in kg
         self.weight = f"{weight:.2f}"
-        self.after(2000, lambda: self.show_weight_display(parameter, weight))
+        self.after(2000, lambda: self.show_weight_display(parameter, self.weight))
 
     def show_weight_intro(self, parameter):
         self.show_gif(self.weight_gif_frames, duration_ms=5000, callback=self.show_weight_gathering, parameter=parameter)
