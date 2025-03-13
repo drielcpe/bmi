@@ -7,12 +7,6 @@ from PIL import Image, ImageTk
 import time
 from collections import Counter
 import bmi
-# import board
-# import busio as io
-# import adafruit_mlx90614
-from time import sleep
-from hx711 import HX711
-#import RPi.GPIO as GPIO
 import threading
 
 class DirectoryHelper:
@@ -65,8 +59,8 @@ class BMICalculator(tk.Tk):
         self.weight = None
         self.configure(bg="black")
         self.overrideredirect(1)
-        self.clear_window()
         self.window_init()
+        self.preload_assets()
         self.show_start_screen()
 
     def window_init(self):
@@ -82,6 +76,8 @@ class BMICalculator(tk.Tk):
 
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
+        
+        # Use a single canvas for all content
         self.canvas = Canvas(
             bg="black",
             height=450,  
@@ -92,73 +88,83 @@ class BMICalculator(tk.Tk):
         )
         self.canvas.place(x=0, y=0)
 
-        image_path = self.relative_to_assets("frame.png")
+    def preload_assets(self):
+        # Preload all GIFs and images
+        self.background_image = self.load_image("frame.jpg")
+        self.intro_gif_frames = self.load_gif("introduction.gif")
+        self.height_gif_frames = self.load_gif("height.gif")
+        self.weight_gif_frames = self.load_gif("weight.gif")
+        self.temp_gif_frames = self.load_gif("temp.gif")
+
+    def load_image(self, path: str):
+        image_path = self.relative_to_assets(path)
         if image_path.exists():
-            self.background_image = PhotoImage(file=str(image_path))
-            self.canvas.create_image(
-                400.0,
-                225.0,
-                image=self.background_image
-            )
+            return ImageTk.PhotoImage(file=str(image_path))
         else:
             print(f"Error: {image_path} not found")
+            return None
+
+    def load_gif(self, gif_filename):
+        gif_path = self.relative_to_assets(gif_filename)
+        if gif_path.exists():
+            gif_image = Image.open(str(gif_path))
+            frames = []
+            try:
+                while True:
+                    frame = ImageTk.PhotoImage(gif_image.copy().resize((800, 450)))
+                    frames.append(frame)
+                    gif_image.seek(len(frames))
+            except EOFError:
+                pass
+            return frames
+        else:
+            print(f"Error: {gif_path} not found")
+            return []
 
     def relative_to_assets(self, path: str) -> Path:
         return self.directory / path
 
-    def preload_gif(self, gif_filename):
-        gif_path = self.relative_to_assets(gif_filename)
-        if gif_path.exists():
-            self.gif_image = Image.open(str(gif_path))
-            self.frames = []
-            try:
-                while True:
-                    frame = ImageTk.PhotoImage(self.gif_image.copy().resize((800,450)))
-                    self.frames.append(frame)
-                    self.gif_image.seek(len(self.frames)) 
-            except EOFError:
-                pass
-        else:
-            print(f"Error: {gif_path} not found")
-
-    def show_gif(self, gif_filename, duration_ms, callback=None, **kwargs):
-        self.clear_window()
-        self.window_init()
-        self.preload_gif(gif_filename)
-        if hasattr(self, 'frames') and self.frames:
+    def show_gif(self, frames, duration_ms, callback=None, **kwargs):
+        self.clear_canvas()
+        if frames:
             self.gif_label = tk.Label(self, bd=0, relief="flat", bg="black")
             self.gif_label.place(x=0, y=0, bordermode="outside")
-            self.animate_gif(0)
+            self.animate_gif(frames, 0)
         if callback:
             self.after(duration_ms, lambda: callback(**kwargs))
 
-    def animate_gif(self, frame_index):
-        if hasattr(self, 'frames') and self.frames:
-            frame = self.frames[frame_index]
+    def animate_gif(self, frames, frame_index):
+        if frames:
+            frame = frames[frame_index]
             self.gif_label.config(image=frame)
-            frame_index = (frame_index + 1) % len(self.frames)
-            self.gif_callback = self.after(100, self.animate_gif, frame_index)
+            frame_index = (frame_index + 1) % len(frames)
+            self.gif_callback = self.after(100, self.animate_gif, frames, frame_index)
 
     def show_start_screen(self):
-        self.show_gif("introduction.gif", duration_ms=3000)
+        self.clear_canvas()
+        self.show_gif(self.intro_gif_frames, duration_ms=3000)
         btn = ButtonConfig()
-        my_label = tk.Label()
-        my_label.pack(padx=4, pady=25)
         btn.create_button(10, 2, self, 400, 350, "START", "#A1E3F9", "#191414", self.show_selection_screen)
 
     def show_selection_screen(self):
-        self.clear_window()
-        self.window_init()
-
+        self.clear_canvas()
         btn = ButtonConfig()
         btn.create_button(20, 2, self, 400, 270, "WEIGHT", "#A1E3F9", "#191414", lambda: self.show_weight_intro(1))
         btn.create_button(20, 2, self, 400, 190, "HEIGHT", "#A1E3F9", "#191414", lambda: self.show_height_intro(1))
         btn.create_button(20, 2, self, 400, 110, "BMI", "#A1E3F9", "#191414", self.show_bmi_screen)
         btn.create_button(20, 2, self, 400, 350, "TEMPERATURE", "#A1E3F9", "#191414", self.show_temperature_intro)
 
+    def clear_canvas(self):
+        # Clear all widgets from the canvas
+        for widget in self.winfo_children():
+            if widget != self.canvas:  # Keep the canvas intact
+                widget.destroy()
+        self.canvas.delete("all")
+        if hasattr(self, 'gif_callback'):
+            self.after_cancel(self.gif_callback)
+
     def show_bmi_screen(self):
-        self.clear_window()
-        self.window_init()
+        self.clear_canvas()
         self.age = None
         self.gender = None
         self.canvas.create_text(
@@ -233,99 +239,33 @@ class BMICalculator(tk.Tk):
         self.age = None
 
     def show_height_intro(self, parameter):
-        self.show_gif("height.gif", duration_ms=3000, callback=self.show_height_gathering, parameter=parameter)
+        self.show_gif(self.height_gif_frames, duration_ms=3000, callback=self.show_height_gathering, parameter=parameter)
 
     def show_height_gathering(self, parameter):
-        self.clear_window()
-        self.window_init()
-        self.gathering_label = tk.Label(self, text="Waiting for the sensor to settle", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        self.clear_canvas()
+        self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=150)
-        TRIG = 23
-        ECHO = 24
-        SPEED_OF_SOUND = 34300
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        GPIO.setup(TRIG, GPIO.OUT)
-        GPIO.setup(ECHO, GPIO.IN)
-        GPIO.output(TRIG, False)
-
-        def measure_distance():
-            GPIO.output(TRIG, True)
-            time.sleep(0.00001)
-            GPIO.output(TRIG, False)
-
-            while GPIO.input(ECHO) == 0:
-                pulse_start = time.time()
-
-            while GPIO.input(ECHO) == 1:
-                pulse_end = time.time()
-
-            pulse_duration = pulse_end - pulse_start
-            distance = (pulse_duration * SPEED_OF_SOUND) / 2
-            return round(distance, 2)
-
-        def gather_data():
-            results = []
-            for _ in range(5):
-                distance = measure_distance()
-                if distance >= 214:
-                    continue
-                results.append(distance)
-                time.sleep(0.00001)
-
-            integer_results = [int(d) for d in results]
-            counter = Counter(integer_results)
-            valid_integers = [k for k, v in counter.items() if v >= 2]
-
-            if valid_integers:
-                selected_integer = valid_integers[0]
-                filtered_results = [d for d in results if int(d) == selected_integer]
-                average_distance = round(sum(filtered_results) / len(filtered_results), 2)
-                if 40 <= average_distance <= 200:
-                    height = 214.16 - average_distance
-                    self.after(4000, lambda: self.show_height_display(parameter, height))
-                    GPIO.cleanup()
-            else:
-                print("No valid measurement found. Retrying...")
-                self.after(1000, gather_data)  # Retry gathering data after 1 second
-
-        threading.Thread(target=gather_data).start()  # Start gathering the data in a separate thread
+        # Hardcoded height value
+        height = 175.0  # Example height in cm
+        self.height = f"{height:.2f}"
+        self.after(2000, lambda: self.show_height_display(parameter, height))
 
     def show_weight_gathering(self, parameter):
-        self.clear_window()
-        self.window_init()
-        self.gathering_label = tk.Label(self, text="Gathering weight information...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
+        self.clear_canvas()
+        self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=150)
-        val = hx.get_weight(5)
-        self.animate_text("weight")
-        weight = f"{val:.2f}" # Use the calculated average weight
-        self.after(3000, lambda: self.show_weight_display(parameter, weight))
-
-    def animate_text(self, weight_height):
-        if weight_height == "weight":
-            extra_text = "Stay Still"
-        elif weight_height == "height":
-            extra_text = "Stand straight"
-        texts = [
-            "Gathering information.",
-            "Gathering information. Please wait...",
-            f"Gathering information. Please wait... {extra_text}..."
-        ]
-        def update_text(index):
-            if index < len(texts):
-                self.gathering_label.config(text=texts[index])
-                self.after(1000, update_text, index + 1)
-        update_text(0)
+        # Hardcoded weight value
+        weight = 70.5  # Example weight in kg
+        self.weight = f"{weight:.2f}"
+        self.after(2000, lambda: self.show_weight_display(parameter, weight))
 
     def show_weight_intro(self, parameter):
-        self.show_gif("weight.gif", duration_ms=3000, callback=self.show_weight_gathering, parameter=parameter)
+        self.show_gif(self.weight_gif_frames, duration_ms=3000, callback=self.show_weight_gathering, parameter=parameter)
 
     def show_weight_display(self, parameter, weight):
-        self.clear_window()
-        self.window_init()
+        self.clear_canvas()
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=250)
-        self.weight = weight
         weight_label = tk.Label(self, text=f"{weight}kg", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
         weight_label.place(x=390, y=180, anchor="center") 
         if parameter == 1:
@@ -335,16 +275,14 @@ class BMICalculator(tk.Tk):
             btn.create_button(20, 2, self, 390, 300, "Next", "#A1E3F9", "#191414", self.show_bmi_calculation)
 
     def show_bmi_calculation(self):
-        self.clear_window()
-        self.window_init()
+        self.clear_canvas()
         _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#A1E3F9", fg="black")
         _label.place(x=400, y=180, anchor="center")
         self.after(2000, self.show_bmi_result)
 
     def show_bmi_result(self):
-        self.clear_window()
-        self.window_init()
-        bmi_value,status = bmi.bmi(self.age,self.gender,self.height,self.weight)
+        self.clear_canvas()
+        bmi_value, status = bmi.bmi(self.age, self.gender, float(self.height), float(self.weight))
         _label = tk.Label(self, text=f"Your BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
         _label.place(x=400, y=180, anchor="center")
         _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
@@ -352,14 +290,11 @@ class BMICalculator(tk.Tk):
         self.after(3000, lambda: self.show_start_screen())
 
     def show_height_display(self, parameter, height):
-        self.clear_window()
-        self.window_init()
+        self.clear_canvas()
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=150)
-        height_value = float(height)
-        height_label = tk.Label(self, text=f"{height_value:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
+        height_label = tk.Label(self, text=f"{height:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
         height_label.place(x=390, y=180, anchor="center") 
-        self.height = f"{height_value:.2f}"
         if parameter == 1:
             self.after(3000, lambda: self.show_start_screen())
         else:
@@ -367,18 +302,15 @@ class BMICalculator(tk.Tk):
             btn.create_button(20, 2, self, 390, 300, "Next", "#A1E3F9", "#191414", lambda: self.show_weight_intro(parameter))
 
     def show_temperature_intro(self):
-        self.show_gif("temp.gif", duration_ms=3000, callback=self.show_temp_gathering)
+        self.show_gif(self.temp_gif_frames, duration_ms=3000, callback=self.show_temp_gathering)
 
     def show_temp_gathering(self):
-        self.clear_window()
-        self.window_init()
-        i2c = io.I2C(board.SCL, board.SDA, frequency=100000)
-        mlx = adafruit_mlx90614.MLX90614(i2c)
+        self.clear_canvas()
+        # Hardcoded temperature value
+        temperature = 36.5  # Example temperature in °C
         self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=190)
-        newtargetTemp = 0.9844 * mlx.object_temperature + 3.8967
-        print("Target Temperature: {:.2f} °C".format(newtargetTemp))
-        temp_label = tk.Label(self, text="{:.2f} °C".format(newtargetTemp), font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
+        temp_label = tk.Label(self, text=f"{temperature:.2f} °C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
         temp_label.place(x=390, y=180, anchor="center")
         self.after(3000, lambda: self.show_start_screen())
 
@@ -422,18 +354,6 @@ class BMICalculator(tk.Tk):
             if hasattr(self, 'error_label'):
                 self.error_label.config(text="Please enter a valid age.")
 
-    def clear_window(self):
-        if hasattr(self, 'gif_callback'):
-            self.after_cancel(self.gif_callback)
-        for widget in self.winfo_children():
-            widget.destroy()
-
 if __name__ == "__main__":
-    hx = HX711(5, 6)
-    referenceUnit = 114
-    hx.set_reference_unit(referenceUnit)
-    hx.reset()
-    hx.tare()
-
     app = BMICalculator()
     app.mainloop()
