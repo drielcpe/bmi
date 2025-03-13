@@ -8,15 +8,17 @@ import time
 from collections import Counter
 import bmi
 import threading
-#sensors
+
+# Sensors
 import RPi.GPIO as GPIO
 import board
 import busio as io
 import adafruit_mlx90614
 from hx711 import HX711
 
+# Initialize GPIO
 GPIO.setmode(GPIO.BCM)  # Use BCM pin numbering
-GPIO.setwarnings(False)
+GPIO.setwarnings(False)  # Disable GPIO warnings
 
 class DirectoryHelper:
     @staticmethod
@@ -70,11 +72,13 @@ class BMICalculator(tk.Tk):
         self.overrideredirect(1)
         self.window_init()
         self.preload_assets()
-        self.hide_mouse_cursor() 
+        self.hide_mouse_cursor()
         self.show_start_screen()
+
     def hide_mouse_cursor(self):
         # Hide the mouse cursor
-        self.config(cursor="none")  
+        self.config(cursor="none")
+
     def window_init(self):
         self.geometry("800x450")
         self.update_idletasks()
@@ -265,11 +269,11 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
+        # Hardcoded height value
+        height = 175.0  # Example height in cm
         TRIG = 23
         ECHO = 24
         SPEED_OF_SOUND = 34300
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
         GPIO.setup(TRIG, GPIO.OUT)
         GPIO.setup(ECHO, GPIO.IN)
         GPIO.output(TRIG, False)
@@ -323,7 +327,6 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
         weight = hx.get_weight(5)
         # Hardcoded weight value
         #weight = 70.5  # Example weight in kg
