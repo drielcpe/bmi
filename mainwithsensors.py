@@ -292,7 +292,7 @@ class BMICalculator(tk.Tk):
             results = []
             for _ in range(5):
                 distance = measure_distance()
-                if distance >= 214:
+                if distance >= 213:
                     continue
                 results.append(distance)
                 time.sleep(0.00001)
@@ -306,7 +306,7 @@ class BMICalculator(tk.Tk):
                 filtered_results = [d for d in results if int(d) == selected_integer]
                 average_distance = round(sum(filtered_results) / len(filtered_results), 2)
                 if 40 <= average_distance <= 200:
-                    height = 214.16 - average_distance
+                    height = 213 - average_distance
                     self.height = f"{height:.2f}"
                     self.after(2000, lambda: self.show_height_display(parameter, height))
                     GPIO.cleanup()
@@ -314,8 +314,6 @@ class BMICalculator(tk.Tk):
                 print("No valid measurement found. Retrying...")
                 self.after(1000, gather_data) 
         threading.Thread(target=gather_data).start()
-        #self.height = f"{height:.2f}"
-        #self.after(2000, lambda: self.show_height_display(parameter, height))
 
     def show_weight_gathering(self, parameter):
         self.clear_canvas()
@@ -323,8 +321,9 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
+        weight = hx.get_weight(5)
         # Hardcoded weight value
-        weight = 70.5  # Example weight in kg
+        #weight = 70.5  # Example weight in kg
         self.weight = f"{weight:.2f}"
         self.after(2000, lambda: self.show_weight_display(parameter, weight))
 
