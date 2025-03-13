@@ -65,8 +65,8 @@ class BMICalculator(tk.Tk):
         self.weight = None
         self.configure(bg="black")
         self.overrideredirect(1)
+        self.clear_window()
         self.window_init()
-        self.preload_assets()
         self.show_start_screen()
 
     def window_init(self):
@@ -82,8 +82,6 @@ class BMICalculator(tk.Tk):
 
         self.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         self.directory = Path(DirectoryHelper.get_current_working_directory()) / "assets"
-        
-        # Use a single canvas for all content
         self.canvas = Canvas(
             bg="black",
             height=450,  
@@ -94,79 +92,73 @@ class BMICalculator(tk.Tk):
         )
         self.canvas.place(x=0, y=0)
 
-    def preload_assets(self):
-        # Preload all GIFs and images
-        self.background_image = self.load_image("frame.png")
-        self.intro_gif_frames = self.load_gif("introduction.gif")
-        self.height_gif_frames = self.load_gif("height.gif")
-        self.weight_gif_frames = self.load_gif("weight.gif")
-        self.temp_gif_frames = self.load_gif("temp.gif")
-
-    def load_image(self, path: str):
-        image_path = self.relative_to_assets(path)
+        image_path = self.relative_to_assets("frame.png")
         if image_path.exists():
-            return ImageTk.PhotoImage(file=str(image_path))
+            self.background_image = PhotoImage(file=str(image_path))
+            self.canvas.create_image(
+                400.0,
+                225.0,
+                image=self.background_image
+            )
         else:
             print(f"Error: {image_path} not found")
-            return None
-
-    def load_gif(self, gif_filename):
-        gif_path = self.relative_to_assets(gif_filename)
-        if gif_path.exists():
-            gif_image = Image.open(str(gif_path))
-            frames = []
-            try:
-                while True:
-                    frame = ImageTk.PhotoImage(gif_image.copy().resize((800, 450)))
-                    frames.append(frame)
-                    gif_image.seek(len(frames))
-            except EOFError:
-                pass
-            return frames
-        else:
-            print(f"Error: {gif_path} not found")
-            return []
 
     def relative_to_assets(self, path: str) -> Path:
         return self.directory / path
 
-    def show_gif(self, frames, duration_ms, callback=None, **kwargs):
-        self.clear_canvas()
-        if frames:
+    def preload_gif(self, gif_filename):
+        gif_path = self.relative_to_assets(gif_filename)
+        if gif_path.exists():
+            self.gif_image = Image.open(str(gif_path))
+            self.frames = []
+            try:
+                while True:
+                    frame = ImageTk.PhotoImage(self.gif_image.copy().resize((800,450)))
+                    self.frames.append(frame)
+                    self.gif_image.seek(len(self.frames)) 
+            except EOFError:
+                pass
+        else:
+            print(f"Error: {gif_path} not found")
+
+    def show_gif(self, gif_filename, duration_ms, callback=None, **kwargs):
+        self.clear_window()
+        self.window_init()
+        self.preload_gif(gif_filename)
+        if hasattr(self, 'frames') and self.frames:
             self.gif_label = tk.Label(self, bd=0, relief="flat", bg="black")
             self.gif_label.place(x=0, y=0, bordermode="outside")
-            self.animate_gif(frames, 0)
+            self.animate_gif(0)
         if callback:
             self.after(duration_ms, lambda: callback(**kwargs))
 
-    def animate_gif(self, frames, frame_index):
-        if frames:
-            frame = frames[frame_index]
+    def animate_gif(self, frame_index):
+        if hasattr(self, 'frames') and self.frames:
+            frame = self.frames[frame_index]
             self.gif_label.config(image=frame)
-            frame_index = (frame_index + 1) % len(frames)
-            self.gif_callback = self.after(100, self.animate_gif, frames, frame_index)
+            frame_index = (frame_index + 1) % len(self.frames)
+            self.gif_callback = self.after(100, self.animate_gif, frame_index)
 
     def show_start_screen(self):
-        self.show_gif(self.intro_gif_frames, duration_ms=3000)
+        self.show_gif("introduction.gif", duration_ms=3000)
         btn = ButtonConfig()
+        my_label = tk.Label()
+        my_label.pack(padx=4, pady=25)
         btn.create_button(10, 2, self, 400, 350, "START", "#A1E3F9", "#191414", self.show_selection_screen)
 
     def show_selection_screen(self):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
+
         btn = ButtonConfig()
         btn.create_button(20, 2, self, 400, 270, "WEIGHT", "#A1E3F9", "#191414", lambda: self.show_weight_intro(1))
         btn.create_button(20, 2, self, 400, 190, "HEIGHT", "#A1E3F9", "#191414", lambda: self.show_height_intro(1))
         btn.create_button(20, 2, self, 400, 110, "BMI", "#A1E3F9", "#191414", self.show_bmi_screen)
         btn.create_button(20, 2, self, 400, 350, "TEMPERATURE", "#A1E3F9", "#191414", self.show_temperature_intro)
 
-    def clear_canvas(self):
-        # Clear only the canvas content instead of destroying all widgets
-        self.canvas.delete("all")
-        if hasattr(self, 'gif_callback'):
-            self.after_cancel(self.gif_callback)
-
     def show_bmi_screen(self):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         self.age = None
         self.gender = None
         self.canvas.create_text(
@@ -241,10 +233,11 @@ class BMICalculator(tk.Tk):
         self.age = None
 
     def show_height_intro(self, parameter):
-        self.show_gif(self.height_gif_frames, duration_ms=3000, callback=self.show_height_gathering, parameter=parameter)
+        self.show_gif("height.gif", duration_ms=3000, callback=self.show_height_gathering, parameter=parameter)
 
     def show_height_gathering(self, parameter):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Waiting for the sensor to settle", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=150)
         TRIG = 23
@@ -299,7 +292,8 @@ class BMICalculator(tk.Tk):
         threading.Thread(target=gather_data).start()  # Start gathering the data in a separate thread
 
     def show_weight_gathering(self, parameter):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Gathering weight information...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=150)
         val = hx.get_weight(5)
@@ -324,10 +318,11 @@ class BMICalculator(tk.Tk):
         update_text(0)
 
     def show_weight_intro(self, parameter):
-        self.show_gif(self.weight_gif_frames, duration_ms=3000, callback=self.show_weight_gathering, parameter=parameter)
+        self.show_gif("weight.gif", duration_ms=3000, callback=self.show_weight_gathering, parameter=parameter)
 
     def show_weight_display(self, parameter, weight):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=250)
         self.weight = weight
@@ -340,13 +335,15 @@ class BMICalculator(tk.Tk):
             btn.create_button(20, 2, self, 390, 300, "Next", "#A1E3F9", "#191414", self.show_bmi_calculation)
 
     def show_bmi_calculation(self):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height}cm)²", font=("Arial", 50, "bold"), padx=30, pady=15, bg="#A1E3F9", fg="black")
         _label.place(x=400, y=180, anchor="center")
         self.after(2000, self.show_bmi_result)
 
     def show_bmi_result(self):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         bmi_value,status = bmi.bmi(self.age,self.gender,self.height,self.weight)
         _label = tk.Label(self, text=f"Your BMI is: {bmi_value:.2f}\nAge: {self.age}\nGender: {self.gender}", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#A1E3F9", fg="black")
         _label.place(x=400, y=180, anchor="center")
@@ -355,7 +352,8 @@ class BMICalculator(tk.Tk):
         self.after(3000, lambda: self.show_start_screen())
 
     def show_height_display(self, parameter, height):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
         self.gathering_label.pack(pady=150)
         height_value = float(height)
@@ -369,10 +367,11 @@ class BMICalculator(tk.Tk):
             btn.create_button(20, 2, self, 390, 300, "Next", "#A1E3F9", "#191414", lambda: self.show_weight_intro(parameter))
 
     def show_temperature_intro(self):
-        self.show_gif(self.temp_gif_frames, duration_ms=3000, callback=self.show_temp_gathering)
+        self.show_gif("temp.gif", duration_ms=3000, callback=self.show_temp_gathering)
 
     def show_temp_gathering(self):
-        self.clear_canvas()
+        self.clear_window()
+        self.window_init()
         i2c = io.I2C(board.SCL, board.SDA, frequency=100000)
         mlx = adafruit_mlx90614.MLX90614(i2c)
         self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#A1E3F9", fg="black")
@@ -422,6 +421,12 @@ class BMICalculator(tk.Tk):
                 self.error_label.config(text="Please select gender")
             if hasattr(self, 'error_label'):
                 self.error_label.config(text="Please enter a valid age.")
+
+    def clear_window(self):
+        if hasattr(self, 'gif_callback'):
+            self.after_cancel(self.gif_callback)
+        for widget in self.winfo_children():
+            widget.destroy()
 
 if __name__ == "__main__":
     hx = HX711(5, 6)
