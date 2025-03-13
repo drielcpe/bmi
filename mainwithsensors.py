@@ -268,6 +268,8 @@ class BMICalculator(tk.Tk):
         TRIG = 23
         ECHO = 24
         SPEED_OF_SOUND = 34300
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
         GPIO.setup(TRIG, GPIO.OUT)
         GPIO.setup(ECHO, GPIO.IN)
         GPIO.output(TRIG, False)
@@ -321,6 +323,7 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
         weight = hx.get_weight(5)
         # Hardcoded weight value
         #weight = 70.5  # Example weight in kg
