@@ -322,10 +322,10 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         GPIO.setmode(GPIO.BCM)
-        weight = hx.get_weight(5)/1000
+        weight = hx.get_weight(5)
         # Hardcoded weight value
         #weight = 70.5  # Example weight in kg
-        self.weight = f"{weight:.2f}"
+        self.weight = f"{weight/1000:.2f}"
         self.after(2000, lambda: self.show_weight_display(parameter, self.weight))
 
     def show_weight_intro(self, parameter):
