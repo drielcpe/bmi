@@ -314,7 +314,7 @@ class BMICalculator(tk.Tk):
                     height = 213 - average_distance
                     self.height = f"{height:.2f}"
                     self.after(2000, lambda: self.show_height_display(parameter, height))
-                    GPIO.cleanup()
+                    #GPIO.cleanup()
             else:
                 print("No valid measurement found. Retrying...")
                 self.after(1000, gather_data) 
