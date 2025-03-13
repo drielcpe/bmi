@@ -1,556 +1,422 @@
-#!/usr/bin/env python3
-
-import statistics as stat
-import time
 import RPi.GPIO as GPIO
+import time
+import threading
 
 class HX711:
-    """
-    HX711 represents chip for reading load cells.
-    """
 
-    def __init__(self, dout_pin, pd_sck_pin, gain_channel_A=128, select_channel='A'):
-        """
-        Init a new instance of HX711.
+    def __init__(self, dout, pd_sck, gain=128):
+        self.PD_SCK = pd_sck
 
-        Args:
-            dout_pin (int): Raspberry Pi pin number where the Data pin of HX711 is connected.
-            pd_sck_pin (int): Raspberry Pi pin number where the Clock pin of HX711 is connected.
-            gain_channel_A (int): Optional, by default value 128. Options (128 || 64).
-            select_channel (str): Optional, by default 'A'. Options ('A' || 'B').
+        self.DOUT = dout
 
-        Raises:
-            TypeError: If pd_sck_pin or dout_pin are not int type.
-        """
-        if not isinstance(dout_pin, int):
-            raise TypeError('dout_pin must be type int. Received: {}'.format(dout_pin))
-        if not isinstance(pd_sck_pin, int):
-            raise TypeError('pd_sck_pin must be type int. Received: {}'.format(pd_sck_pin))
+        # Mutex for reading from the HX711, in case multiple threads in client
+        # software try to access get values from the class at the same time.
+        self.readLock = threading.Lock()
+        
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.PD_SCK, GPIO.OUT)
+        GPIO.setup(self.DOUT, GPIO.IN)
 
-        self._pd_sck = pd_sck_pin
-        self._dout = dout_pin
-        self._gain_channel_A = 0
-        self._offset_A_128 = 0  # offset for channel A and gain 128
-        self._offset_A_64 = 0  # offset for channel A and gain 64
-        self._offset_B = 0  # offset for channel B
-        self._last_raw_data_A_128 = 0
-        self._last_raw_data_A_64 = 0
-        self._last_raw_data_B = 0
-        self._wanted_channel = ''
-        self._current_channel = ''
-        self._scale_ratio_A_128 = 1  # scale ratio for channel A and gain 128
-        self._scale_ratio_A_64 = 1  # scale ratio for channel A and gain 64
-        self._scale_ratio_B = 1  # scale ratio for channel B
-        self._debug_mode = False
-        self._data_filter = self.outliers_filter  # default filter
+        self.GAIN = 0
 
-        GPIO.setup(self._pd_sck, GPIO.OUT)  # pin _pd_sck is output only
-        GPIO.setup(self._dout, GPIO.IN)  # pin _dout is input only
-        self.select_channel(select_channel)
-        self.set_gain_A(gain_channel_A)
+        # The value returned by the hx711 that corresponds to your reference
+        # unit AFTER dividing by the SCALE.
+        self.REFERENCE_UNIT = 1
+        self.REFERENCE_UNIT_B = 1
 
-    def select_channel(self, channel):
-        """
-        Select the desired channel.
+        self.OFFSET = 1
+        self.OFFSET_B = 1
+        self.lastVal = int(0)
 
-        Args:
-            channel (str): The channel to select. Options ('A' || 'B').
+        self.DEBUG_PRINTING = False
 
-        Raises:
-            ValueError: If channel is not 'A' or 'B'.
-        """
-        channel = channel.capitalize()
-        if channel not in ['A', 'B']:
-            raise ValueError('Parameter "channel" has to be "A" or "B". Received: {}'.format(channel))
-        self._wanted_channel = channel
-        self._read()
-        time.sleep(0.5)
+        self.byte_format = 'MSB'
+        self.bit_format = 'MSB'
 
-    def set_gain_A(self, gain):
-        """
-        Set gain for channel A.
+        self.set_gain(gain)
+        
+        # Think about whether this is necessary.
+        time.sleep(1)
 
-        Args:
-            gain (int): Gain for channel A (128 || 64).
 
-        Raises:
-            ValueError: If gain is different than 128 or 64.
-        """
-        if gain not in [128, 64]:
-            raise ValueError('gain has to be 128 or 64. Received: {}'.format(gain))
-        self._gain_channel_A = gain
-        self._read()
-        time.sleep(0.5)
+    def convertFromTwosComplement24bit(self, inputValue):
+        return -(inputValue & 0x800000) + (inputValue & 0x7fffff)
 
-    def zero(self, readings=30):
-        """
-        Set the current data as an offset for the channel (tare).
+    
+    def is_ready(self):
+        return GPIO.input(self.DOUT) == 0
 
-        Args:
-            readings (int): Number of readings for mean. Allowed values 1..99.
+    
+    def set_gain(self, gain):
+        if gain == 128:
+            self.GAIN = 1
+        elif gain == 64:
+            self.GAIN = 3
+        elif gain == 32:
+            self.GAIN = 2
 
-        Raises:
-            ValueError: If readings are not in range 1..99.
+        GPIO.output(self.PD_SCK, False)
 
-        Returns: True if error occurred.
-        """
-        if not (0 < readings < 100):
-            raise ValueError('Parameter "readings" can be in range 1 up to 99. Received: {}'.format(readings))
+        # Read out a set of raw bytes and throw it away.
+        self.readRawBytes()
 
-        result = self.get_raw_data_mean(readings)
-        if result is False:
-            return True
+        
+    def get_gain(self):
+        if self.GAIN == 1:
+            return 128
+        if self.GAIN == 3:
+            return 64
+        if self.GAIN == 2:
+            return 32
 
-        if self._current_channel == 'A' and self._gain_channel_A == 128:
-            self._offset_A_128 = result
-        elif self._current_channel == 'A' and self._gain_channel_A == 64:
-            self._offset_A_64 = result
-        elif self._current_channel == 'B':
-            self._offset_B = result
+        # Shouldn't get here.
+        return 0
+        
+
+    def readNextBit(self):
+       # Clock HX711 Digital Serial Clock (PD_SCK).  DOUT will be
+       # ready 1us after PD_SCK rising edge, so we sample after
+       # lowering PD_SCL, when we know DOUT will be stable.
+       GPIO.output(self.PD_SCK, True)
+       GPIO.output(self.PD_SCK, False)
+       value = GPIO.input(self.DOUT)
+
+       # Convert Boolean to int and return it.
+       return int(value)
+
+
+    def readNextByte(self):
+       byteValue = 0
+
+       # Read bits and build the byte from top, or bottom, depending
+       # on whether we are in MSB or LSB bit mode.
+       for x in range(8):
+          if self.bit_format == 'MSB':
+             byteValue <<= 1
+             byteValue |= self.readNextBit()
+          else:
+             byteValue >>= 1              
+             byteValue |= self.readNextBit() * 0x80
+
+       # Return the packed byte.
+       return byteValue 
+        
+
+    def readRawBytes(self):
+        # Wait for and get the Read Lock, in case another thread is already
+        # driving the HX711 serial interface.
+        self.readLock.acquire()
+
+        # Wait until HX711 is ready for us to read a sample.
+        while not self.is_ready():
+           pass
+
+        # Read three bytes of data from the HX711.
+        firstByte  = self.readNextByte()
+        secondByte = self.readNextByte()
+        thirdByte  = self.readNextByte()
+
+        # HX711 Channel and gain factor are set by number of bits read
+        # after 24 data bits.
+        for i in range(self.GAIN):
+           # Clock a bit out of the HX711 and throw it away.
+           self.readNextBit()
+
+        # Release the Read Lock, now that we've finished driving the HX711
+        # serial interface.
+        self.readLock.release()           
+
+        # Depending on how we're configured, return an ordered list of raw byte
+        # values.
+        if self.byte_format == 'LSB':
+           return [thirdByte, secondByte, firstByte]
         else:
-            return True
-        return False
+           return [firstByte, secondByte, thirdByte]
 
-    def set_offset(self, offset, channel='', gain_A=0):
-        """
-        Set desired offset for a specific channel and gain.
 
-        Args:
-            offset (int): Specific offset for channel.
-            channel (str): Optional, by default it is the current channel. Options ('A' || 'B').
-            gain_A (int): Optional, by default it is the current gain. Options (128 || 64).
+    def read_long(self):
+        # Get a sample from the HX711 in the form of raw bytes.
+        dataBytes = self.readRawBytes()
 
-        Raises:
-            ValueError: If channel is not ('A' || 'B' || '').
-            TypeError: If offset is not int type.
-        """
-        if not isinstance(offset, int):
-            raise TypeError('Parameter "offset" has to be integer. Received: {}'.format(offset))
 
-        channel = channel.capitalize()
-        if channel == 'A' and gain_A == 128:
-            self._offset_A_128 = offset
-        elif channel == 'A' and gain_A == 64:
-            self._offset_A_64 = offset
-        elif channel == 'B':
-            self._offset_B = offset
-        elif channel == '':
-            if self._current_channel == 'A' and self._gain_channel_A == 128:
-                self._offset_A_128 = offset
-            elif self._current_channel == 'A' and self._gain_channel_A == 64:
-                self._offset_A_64 = offset
-            else:
-                self._offset_B = offset
+        if self.DEBUG_PRINTING:
+            print(dataBytes,)
+        
+        # Join the raw bytes into a single 24bit 2s complement value.
+        twosComplementValue = ((dataBytes[0] << 16) |
+                               (dataBytes[1] << 8)  |
+                               dataBytes[2])
+
+        if self.DEBUG_PRINTING:
+            print("Twos: 0x%06x" % twosComplementValue)
+        
+        # Convert from 24bit twos-complement to a signed value.
+        signedIntValue = self.convertFromTwosComplement24bit(twosComplementValue)
+
+        # Record the latest sample value we've read.
+        self.lastVal = signedIntValue
+
+        # Return the sample value we've read from the HX711.
+        return int(signedIntValue)
+
+    
+    def read_average(self, times=3):
+        # Make sure we've been asked to take a rational amount of samples.
+        if times <= 0:
+            raise ValueError("HX711()::read_average(): times must >= 1!!")
+
+        # If we're only average across one value, just read it and return it.
+        if times == 1:
+            return self.read_long()
+
+        # If we're averaging across a low amount of values, just take the
+        # median.
+        if times < 5:
+            return self.read_median(times)
+
+        # If we're taking a lot of samples, we'll collect them in a list, remove
+        # the outliers, then take the mean of the remaining set.
+        valueList = []
+
+        for x in range(times):
+            valueList += [self.read_long()]
+
+        valueList.sort()
+
+        # We'll be trimming 20% of outlier samples from top and bottom of collected set.
+        trimAmount = int(len(valueList) * 0.2)
+
+        # Trim the edge case values.
+        valueList = valueList[trimAmount:-trimAmount]
+
+        # Return the mean of remaining samples.
+        return sum(valueList) / len(valueList)
+
+
+    # A median-based read method, might help when getting random value spikes
+    # for unknown or CPU-related reasons
+    def read_median(self, times=3):
+       if times <= 0:
+          raise ValueError("HX711::read_median(): times must be greater than zero!")
+      
+       # If times == 1, just return a single reading.
+       if times == 1:
+          return self.read_long()
+
+       valueList = []
+
+       for x in range(times):
+          valueList += [self.read_long()]
+
+       valueList.sort()
+
+       # If times is odd we can just take the centre value.
+       if (times & 0x1) == 0x1:
+          return valueList[len(valueList) // 2]
+       else:
+          # If times is even we have to take the arithmetic mean of
+          # the two middle values.
+          midpoint = len(valueList) / 2
+          return sum(valueList[midpoint:midpoint+2]) / 2.0
+
+
+    # Compatibility function, uses channel A version
+    def get_value(self, times=3):
+        return self.get_value_A(times)
+
+
+    def get_value_A(self, times=3):
+        return self.read_median(times) - self.get_offset_A()
+
+
+    def get_value_B(self, times=3):
+        # for channel B, we need to set_gain(32)
+        g = self.get_gain()
+        self.set_gain(32)
+        value = self.read_median(times) - self.get_offset_B()
+        self.set_gain(g)
+        return value
+
+    # Compatibility function, uses channel A version
+    def get_weight(self, times=3):
+        return self.get_weight_A(times)
+
+
+    def get_weight_A(self, times=3):
+        value = self.get_value_A(times)
+        value = value / self.REFERENCE_UNIT
+        return value
+
+    def get_weight_B(self, times=3):
+        value = self.get_value_B(times)
+        value = value / self.REFERENCE_UNIT_B
+        return value
+    
+
+    # Sets tare for channel A for compatibility purposes
+    def tare(self, times=15):
+        return self.tare_A(times)
+    
+    
+    def tare_A(self, times=15):
+        # Backup REFERENCE_UNIT value
+        backupReferenceUnit = self.get_reference_unit_A()
+        self.set_reference_unit_A(1)
+        
+        value = self.read_average(times)
+
+        if self.DEBUG_PRINTING:
+            print("Tare A value:", value)
+        
+        self.set_offset_A(value)
+
+        # Restore the reference unit, now that we've got our offset.
+        self.set_reference_unit_A(backupReferenceUnit)
+
+        return value
+
+
+    def tare_B(self, times=15):
+        # Backup REFERENCE_UNIT value
+        backupReferenceUnit = self.get_reference_unit_B()
+        self.set_reference_unit_B(1)
+
+        # for channel B, we need to set_gain(32)
+        backupGain = self.get_gain()
+        self.set_gain(32)
+
+        value = self.read_average(times)
+
+        if self.DEBUG_PRINTING:
+            print("Tare B value:", value)
+        
+        self.set_offset_B(value)
+
+        # Restore gain/channel/reference unit settings.
+        self.set_gain(backupGain)
+        self.set_reference_unit_B(backupReferenceUnit)
+       
+        return value
+
+
+    def set_reading_format(self, byte_format="LSB", bit_format="MSB"):
+        if byte_format == "LSB":
+            self.byte_format = byte_format
+        elif byte_format == "MSB":
+            self.byte_format = byte_format
         else:
-            raise ValueError('Parameter "channel" has to be "A" or "B". Received: {}'.format(channel))
+            raise ValueError("Unrecognised byte_format: \"%s\"" % byte_format)
 
-    def set_scale_ratio(self, scale_ratio, channel='', gain_A=0):
-        """
-        Set the ratio for calculating weight in desired units.
-
-        Args:
-            scale_ratio (float): Number > 0.0 that is used for conversion to weight units.
-            channel (str): Optional, by default it is the current channel. Options ('A' || 'B').
-            gain_A (int): Optional, by default it is the current gain. Options (128 || 64).
-
-        Raises:
-            ValueError: If channel is not ('A' || 'B' || '').
-        """
-        channel = channel.capitalize()
-        if channel == 'A' and gain_A == 128:
-            self._scale_ratio_A_128 = scale_ratio
-        elif channel == 'A' and gain_A == 64:
-            self._scale_ratio_A_64 = scale_ratio
-        elif channel == 'B':
-            self._scale_ratio_B = scale_ratio
-        elif channel == '':
-            if self._current_channel == 'A' and self._gain_channel_A == 128:
-                self._scale_ratio_A_128 = scale_ratio
-            elif self._current_channel == 'A' and self._gain_channel_A == 64:
-                self._scale_ratio_A_64 = scale_ratio
-            else:
-                self._scale_ratio_B = scale_ratio
+        if bit_format == "LSB":
+            self.bit_format = bit_format
+        elif bit_format == "MSB":
+            self.bit_format = bit_format
         else:
-            raise ValueError('Parameter "channel" has to be "A" or "B". Received: {}'.format(channel))
+            raise ValueError("Unrecognised bitformat: \"%s\"" % bit_format)
 
-    def set_data_filter(self, data_filter):
-        """
-        Set data filter.
+            
+    # sets offset for channel A for compatibility reasons
+    def set_offset(self, offset):
+        self.set_offset_A(offset)
 
-        Args:
-            data_filter (function): Data filter that takes a list of int numbers and returns a list of filtered int numbers.
+    def set_offset_A(self, offset):
+        self.OFFSET = offset
 
-        Raises:
-            TypeError: If filter is not a function.
-        """
-        if not callable(data_filter):
-            raise TypeError('Parameter "data_filter" must be a function. Received: {}'.format(data_filter))
-        self._data_filter = data_filter
+    def set_offset_B(self, offset):
+        self.OFFSET_B = offset
 
-    def set_debug_mode(self, flag=False):
-        """
-        Turn on or off debug mode.
+    def get_offset(self):
+        return self.get_offset_A()
 
-        Args:
-            flag (bool): True turns on the debug mode. False turns it off.
+    def get_offset_A(self):
+        return self.OFFSET
 
-        Raises:
-            ValueError: If flag is not bool type.
-        """
-        if not isinstance(flag, bool):
-            raise ValueError('Parameter "flag" can be only BOOL value. Received: {}'.format(flag))
-        self._debug_mode = flag
-        print('Debug mode {}'.format('ENABLED' if flag else 'DISABLED'))
+    def get_offset_B(self):
+        return self.OFFSET_B
 
-    def _save_last_raw_data(self, channel, gain_A, data):
-        """
-        Save the last raw data for a specific channel and gain.
 
-        Args:
-            channel (str): Channel ('A' || 'B').
-            gain_A (int): Gain (128 || 64).
-            data (int): Data to save.
+    
+    def set_reference_unit(self, reference_unit):
+        self.set_reference_unit_A(reference_unit)
 
-        Returns: False if error occurred.
-        """
-        if channel == 'A' and gain_A == 128:
-            self._last_raw_data_A_128 = data
-        elif channel == 'A' and gain_A == 64:
-            self._last_raw_data_A_64 = data
-        elif channel == 'B':
-            self._last_raw_data_B = data
-        else:
-            return False
+        
+    def set_reference_unit_A(self, reference_unit):
+        # Make sure we aren't asked to use an invalid reference unit.
+        if reference_unit == 0:
+            raise ValueError("HX711::set_reference_unit_A() can't accept 0 as a reference unit!")
+            return
 
-    def _ready(self):
-        """
-        Check if data is ready for reading.
+        self.REFERENCE_UNIT = reference_unit
 
-        Returns: bool True if ready, else False.
-        """
-        return GPIO.input(self._dout) == 0
+        
+    def set_reference_unit_B(self, reference_unit):
+        # Make sure we aren't asked to use an invalid reference unit.
+        if reference_unit == 0:
+            raise ValueError("HX711::set_reference_unit_A() can't accept 0 as a reference unit!")
+            return
 
-    def _set_channel_gain(self, num):
-        """
-        Set channel and gain.
+        self.REFERENCE_UNIT_B = reference_unit
 
-        Args:
-            num (int): Number of clock pulses to send.
 
-        Returns: bool True if successful, else False.
-        """
-        for _ in range(num):
-            start_counter = time.perf_counter()
-            GPIO.output(self._pd_sck, True)
-            GPIO.output(self._pd_sck, False)
-            end_counter = time.perf_counter()
-            if end_counter - start_counter >= 0.00006:
-                if self._debug_mode:
-                    print('Not enough fast while setting gain and channel')
-                    print('Time elapsed: {}'.format(end_counter - start_counter))
-                return False
-        return True
+    def get_reference_unit(self):
+        return get_reference_unit_A()
 
-    def _read(self):
-        """
-        Read data from HX711.
+        
+    def get_reference_unit_A(self):
+        return self.REFERENCE_UNIT
 
-        Returns: (bool || int) False if error occurred, else the read data.
-        """
-        GPIO.output(self._pd_sck, False)
-        ready_counter = 0
-        while not self._ready() and ready_counter <= 40:
-            time.sleep(0.01)
-            ready_counter += 1
-            if ready_counter == 50:
-                if self._debug_mode:
-                    print('self._read() not ready after 40 trials')
-                return False
-
-        data_in = 0
-        for _ in range(24):
-            start_counter = time.perf_counter()
-            GPIO.output(self._pd_sck, True)
-            GPIO.output(self._pd_sck, False)
-            end_counter = time.perf_counter()
-            if end_counter - start_counter >= 0.00006:
-                if self._debug_mode:
-                    print('Not enough fast while reading data')
-                    print('Time elapsed: {}'.format(end_counter - start_counter))
-                return False
-            data_in = (data_in << 1) | GPIO.input(self._dout)
-
-        if self._wanted_channel == 'A' and self._gain_channel_A == 128:
-            if not self._set_channel_gain(1):
-                return False
-            self._current_channel = 'A'
-            self._gain_channel_A = 128
-        elif self._wanted_channel == 'A' and self._gain_channel_A == 64:
-            if not self._set_channel_gain(3):
-                return False
-            self._current_channel = 'A'
-            self._gain_channel_A = 64
-        else:
-            if not self._set_channel_gain(2):
-                return False
-            self._current_channel = 'B'
-
-        if self._debug_mode:
-            print('Binary value as received: {}'.format(bin(data_in)))
-
-        if data_in == 0x7fffff or data_in == 0x800000:
-            if self._debug_mode:
-                print('Invalid data detected: {}'.format(data_in))
-            return False
-
-        signed_data = -(data_in ^ 0xffffff) + 1 if data_in & 0x800000 else data_in
-
-        if self._debug_mode:
-            print('Converted 2\'s complement value: {}'.format(signed_data))
-
-        return signed_data
-
-    def get_raw_data_mean(self, readings=30):
-        """
-        Get mean value of readings.
-
-        Args:
-            readings (int): Number of readings for mean.
-
-        Returns: (bool || int) False if error occurred, else the mean value.
-        """
-        backup_channel = self._current_channel
-        backup_gain = self._gain_channel_A
-        data_list = []
-        for _ in range(readings):
-            data_list.append(self._read())
-        data_mean = False
-        if readings > 2 and self._data_filter:
-            filtered_data = self._data_filter(data_list)
-            if not filtered_data:
-                return False
-            if self._debug_mode:
-                print('data_list: {}'.format(data_list))
-                print('filtered_data list: {}'.format(filtered_data))
-                print('data_mean:', stat.mean(filtered_data))
-            data_mean = stat.mean(filtered_data)
-        else:
-            data_mean = stat.mean(data_list)
-        self._save_last_raw_data(backup_channel, backup_gain, data_mean)
-        return int(data_mean)
-
-    def get_data_mean(self, readings=30):
-        """
-        Get mean value of readings minus offset.
-
-        Args:
-            readings (int): Number of readings for mean.
-
-        Returns: (bool || int) False if error occurred, else the mean value.
-        """
-        result = self.get_raw_data_mean(readings)
-        if result is False:
-            return False
-        if self._current_channel == 'A' and self._gain_channel_A == 128:
-            return result - self._offset_A_128
-        elif self._current_channel == 'A' and self._gain_channel_A == 64:
-            return result - self._offset_A_64
-        else:
-            return result - self._offset_B
-
-    def get_weight_mean(self, readings=30):
-        """
-        Get mean value of readings minus offset divided by scale ratio.
-
-        Args:
-            readings (int): Number of readings for mean.
-
-        Returns: (bool || float) False if error occurred, else the weight.
-        """
-        result = self.get_raw_data_mean(readings)
-        if result is False:
-            return False
-        if self._current_channel == 'A' and self._gain_channel_A == 128:
-            return float((result - self._offset_A_128) / self._scale_ratio_A_128)
-        elif self._current_channel == 'A' and self._gain_channel_A == 64:
-            return float((result - self._offset_A_64) / self._scale_ratio_A_64)
-        else:
-            return float((result - self._offset_B) / self._scale_ratio_B)
-
-    def get_current_channel(self):
-        """
-        Get the current channel.
-
-        Returns: ('A' || 'B')
-        """
-        return self._current_channel
-
-    def get_data_filter(self):
-        """
-        Get the current data filter.
-
-        Returns: The current data filter function.
-        """
-        return self._data_filter
-
-    def get_current_gain_A(self):
-        """
-        Get the current gain for channel A.
-
-        Returns: (128 || 64)
-        """
-        return self._gain_channel_A
-
-    def get_last_raw_data(self, channel='', gain_A=0):
-        """
-        Get the last raw data for a specific channel and gain.
-
-        Args:
-            channel (str): Channel ('A' || 'B'). If not provided, returns the current one.
-            gain_A (int): Gain (128 || 64). If not provided, returns the current one.
-
-        Raises:
-            ValueError: If channel is not ('A' || 'B' || '') or gain_A is not (128 || 64 || 0).
-
-        Returns: int The last raw data.
-        """
-        channel = channel.capitalize()
-        if channel == 'A' and gain_A == 128:
-            return self._last_raw_data_A_128
-        elif channel == 'A' and gain_A == 64:
-            return self._last_raw_data_A_64
-        elif channel == 'B':
-            return self._last_raw_data_B
-        elif channel == '':
-            if self._current_channel == 'A' and self._gain_channel_A == 128:
-                return self._last_raw_data_A_128
-            elif self._current_channel == 'A' and self._gain_channel_A == 64:
-                return self._last_raw_data_A_64
-            else:
-                return self._last_raw_data_B
-        else:
-            raise ValueError(
-                'Parameter "channel" has to be "A" or "B". '
-                'Received: {} \nParameter "gain_A" has to be 128 or 64. Received {}'
-                .format(channel, gain_A))
-
-    def get_current_offset(self, channel='', gain_A=0):
-        """
-        Get the current offset for a specific channel and gain.
-
-        Args:
-            channel (str): Channel ('A' || 'B'). If not provided, returns the current one.
-            gain_A (int): Gain (128 || 64). If not provided, returns the current one.
-
-        Raises:
-            ValueError: If channel is not ('A' || 'B' || '') or gain_A is not (128 || 64 || 0).
-
-        Returns: int The current offset.
-        """
-        channel = channel.capitalize()
-        if channel == 'A' and gain_A == 128:
-            return self._offset_A_128
-        elif channel == 'A' and gain_A == 64:
-            return self._offset_A_64
-        elif channel == 'B':
-            return self._offset_B
-        elif channel == '':
-            if self._current_channel == 'A' and self._gain_channel_A == 128:
-                return self._offset_A_128
-            elif self._current_channel == 'A' and self._gain_channel_A == 64:
-                return self._offset_A_64
-            else:
-                return self._offset_B
-        else:
-            raise ValueError(
-                'Parameter "channel" has to be "A" or "B". '
-                'Received: {} \nParameter "gain_A" has to be 128 or 64. Received {}'
-                .format(channel, gain_A))
-
-    def get_current_scale_ratio(self, channel='', gain_A=0):
-        """
-        Get the current scale ratio for a specific channel and gain.
-
-        Args:
-            channel (str): Channel ('A' || 'B'). If not provided, returns the current one.
-            gain_A (int): Gain (128 || 64). If not provided, returns the current one.
-
-        Returns: int The current scale ratio.
-        """
-        channel = channel.capitalize()
-        if channel == 'A' and gain_A == 128:
-            return self._scale_ratio_A_128
-        elif channel == 'A' and gain_A == 64:
-            return self._scale_ratio_A_64
-        elif channel == 'B':
-            return self._scale_ratio_B
-        elif channel == '':
-            if self._current_channel == 'A' and self._gain_channel_A == 128:
-                return self._scale_ratio_A_128
-            elif self._current_channel == 'A' and self._gain_channel_A == 64:
-                return self._scale_ratio_A_64
-            else:
-                return self._scale_ratio_B
-        else:
-            raise ValueError(
-                'Parameter "channel" has to be "A" or "B". '
-                'Received: {} \nParameter "gain_A" has to be 128 or 64. Received {}'
-                .format(channel, gain_A))
-
+        
+    def get_reference_unit_B(self):
+        return self.REFERENCE_UNIT_B
+        
+        
     def power_down(self):
-        """
-        Power down the HX711.
-        """
-        GPIO.output(self._pd_sck, False)
-        GPIO.output(self._pd_sck, True)
-        time.sleep(0.01)
+        # Wait for and get the Read Lock, in case another thread is already
+        # driving the HX711 serial interface.
+        self.readLock.acquire()
+
+        # Because a rising edge on HX711 Digital Serial Clock (PD_SCK).  We then
+        # leave it held up and wait 100us.  After 60us the HX711 should be
+        # powered down.
+        GPIO.output(self.PD_SCK, False)
+        GPIO.output(self.PD_SCK, True)
+
+        time.sleep(0.0001)
+
+        # Release the Read Lock, now that we've finished driving the HX711
+        # serial interface.
+        self.readLock.release()           
+
 
     def power_up(self):
-        """
-        Power up the HX711.
-        """
-        GPIO.output(self._pd_sck, False)
-        time.sleep(0.01)
+        # Wait for and get the Read Lock, incase another thread is already
+        # driving the HX711 serial interface.
+        self.readLock.acquire()
+
+        # Lower the HX711 Digital Serial Clock (PD_SCK) line.
+        GPIO.output(self.PD_SCK, False)
+
+        # Wait 100 us for the HX711 to power back up.
+        time.sleep(0.0001)
+
+        # Release the Read Lock, now that we've finished driving the HX711
+        # serial interface.
+        self.readLock.release()
+
+        # HX711 will now be defaulted to Channel A with gain of 128.  If this
+        # isn't what client software has requested from us, take a sample and
+        # throw it away, so that next sample from the HX711 will be from the
+        # correct channel/gain.
+        if self.get_gain() != 128:
+            self.readRawBytes()
+
 
     def reset(self):
-        """
-        Reset the HX711.
-
-        Returns: True if error encountered.
-        """
         self.power_down()
         self.power_up()
-        result = self.get_raw_data_mean(6)
-        return result is False
 
-    def outliers_filter(self, data_list, stdev_thresh=1.0):
-        """
-        Filter out outliers from the provided list of int.
+def hx711_add_event_detect(hx711_instance, event_callback):
+        GPIO.add_event_detect(self.DOUT, GPIO.FALLING, 
+            callback=event_callback)
 
-        Args:
-            data_list ([int]): List of int. It can contain Bool False that is removed.
-            stdev_thresh (float): Threshold for standard deviation.
-
-        Returns: list of filtered data.
-        """
-        data = [num for num in data_list if (num != -1 and num is not False and num is not True)]
-        if not data:
-            return []
-
-        median = stat.median(data)
-        dists_from_median = [abs(measurement - median) for measurement in data]
-        stdev = stat.stdev(dists_from_median)
-        if stdev:
-            ratios_to_stdev = [dist / stdev for dist in dists_from_median]
-        else:
-            return [median]
-        filtered_data = [data[i] for i in range(len(data)) if ratios_to_stdev[i] < stdev_thresh]
-        return filtered_data
-
-
-# Main execution
-if __name__ == '__main__':
-    GPIO.setmode(GPIO.BCM)  # Set GPIO pin mode to BCM numbering
-    hx = HX711(dout_pin=5, pd_sck_pin=6)  # Create an object
-    print(hx.get_raw_data_mean())  # Get raw data reading from HX711
-    GPIO.cleanup()  # Clean up GPIO
+# EOF - hx711.py

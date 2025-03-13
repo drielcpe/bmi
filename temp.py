@@ -12,5 +12,3 @@ print("Ambient Temperature:", ambientTemp, "°C")
 print("Target Temperature:", targetTemp,"°C")
 newtargetTemp = 0.9844 * mlx.object_temperature + 3.8967
 print("Target Temperature with formula: {:.2f}".format(newtargetTemp))
-deepseekformula = (1.513* mlx.object_temperature)-12.993
-print("Target Temperature with formula: {:.2f}".format(deepseekformula))
