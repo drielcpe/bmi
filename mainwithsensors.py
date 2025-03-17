@@ -270,7 +270,6 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         # Hardcoded height value
-        height = 175.0  # Example height in cm
         TRIG = 23
         ECHO = 24
         SPEED_OF_SOUND = 34300
@@ -310,10 +309,9 @@ class BMICalculator(tk.Tk):
                 selected_integer = valid_integers[0]
                 filtered_results = [d for d in results if int(d) == selected_integer]
                 average_distance = round(sum(filtered_results) / len(filtered_results), 2)
-                if 40 <= average_distance <= 200:
-                    height = 213 - (average_distance * .01)
-                    self.height = f"{height:.2f}"
-                    self.after(2000, lambda: self.show_height_display(parameter, height))
+                height = 213 - (average_distance * .01)
+                self.height = f"{height:.2f}"
+                self.after(2000, lambda: self.show_height_display(parameter, height))
                     #GPIO.cleanup()
             else:
                 print("No valid measurement found. Retrying...")
@@ -326,7 +324,6 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Weight received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
-        GPIO.setmode(GPIO.BCM)
         weight = hx.get_weight(5)
         hx.power_down()
         hx.power_up()
@@ -446,7 +443,7 @@ class BMICalculator(tk.Tk):
 if __name__ == "__main__":
     hx = HX711(5, 6)
     hx.set_reading_format("MSB", "MSB")
-    referenceUnit = 25.22
+    referenceUnit = 21.35
     hx.set_reference_unit(referenceUnit)
     hx.reset()
     hx.tare()
