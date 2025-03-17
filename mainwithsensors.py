@@ -328,9 +328,7 @@ class BMICalculator(tk.Tk):
         hx.power_down()
         hx.power_up()
         time.sleep(0.1)
-        # Hardcoded weight value
-        #weight = 70.5  # Example weight in kg
-        self.weight = f"{weight/1000:.2f}"
+        self.weight = f"{int(weight / 1000)}"
         self.after(2000, lambda: self.show_weight_display(parameter, self.weight))
 
     def show_weight_intro(self, parameter):
