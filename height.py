@@ -56,7 +56,7 @@ def gather_height():
 
             # Check if the average distance is within the valid range (40 cm to 200 cm)
           
-            height = 205 - average_distance
+            height = 201 - average_distance
             print(f"Height: {height} cm")
             GPIO.cleanup()
             return {
