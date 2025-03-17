@@ -39,7 +39,7 @@ because if I used the 114000, I'd be getting milligrams instead of grams.
 '''
 
 referenceUnit = 20.22
-hx.set_reference_unit(referenceUnit)
+#hx.set_reference_unit(referenceUnit)
 
 hx.reset()
 

@@ -328,6 +328,9 @@ class BMICalculator(tk.Tk):
         self.gathering_label.pack(pady=150)
         GPIO.setmode(GPIO.BCM)
         weight = hx.get_weight(5)
+        hx.power_down()
+        hx.power_up()
+        time.sleep(0.1)
         # Hardcoded weight value
         #weight = 70.5  # Example weight in kg
         self.weight = f"{weight/1000:.2f}"
