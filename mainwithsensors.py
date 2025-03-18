@@ -454,6 +454,8 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         # Display background image
         try:
+            print(self.weight)
+            print(self.height)
             _label = tk.Label(self, text=f"BMI = {float(self.weight)} kg / ({float(self.height*0.01)}m)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
         except:
             _label = tk.Label(self, text=f"Error in gathering return to home page", padx=30, pady=15, bg="#211C84", fg="#ffffff")
@@ -472,7 +474,7 @@ class BMICalculator(tk.Tk):
         _label_result.place(x=350, y=300, anchor="center")
         self.log_event("BMI", f"BMI is: {bmi_value:.2f} Age: {self.age} Gender: {self.gender} Height: {self.height} Weight: {self.weight}")
          
-        self.after(3000, lambda: self.show_start_screen()) 
+        self.after(6000, lambda: self.show_start_screen()) 
 
     def show_height_display(self, parameter, height):
         self.clear_canvas()
