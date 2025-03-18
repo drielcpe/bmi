@@ -8,7 +8,8 @@ import time
 from collections import Counter
 import bmi
 import threading
-
+import datetime
+from tkinter import ttk 
 # Sensors
 import RPi.GPIO as GPIO
 import board
@@ -159,6 +160,46 @@ class BMICalculator(tk.Tk):
             frame_index = (frame_index + 1) % len(frames)
             self.gif_callback = self.after(100, self.animate_gif, frames, frame_index)
 
+    def show_logs(self):
+        self.clear_canvas()
+        self.canvas.create_image(400, 225, image=self.background_image)
+
+        columns = ("Date/Time", "Type", "Result")
+        tree = ttk.Treeview(self, columns=columns, show="headings")
+
+        tree.heading("Date/Time", text="Date/Time")
+        tree.column("Date/Time", width=180, anchor="center")  
+
+        tree.heading("Type", text="Type")
+        tree.column("Type", width=100, anchor="center")  
+
+        tree.heading("Result", text="Result")
+        tree.column("Result", width=350, anchor="w") 
+
+        try:
+            with open("logs.txt", "r") as file:
+                for line in file:
+                    parts = line.strip().split("\t") 
+                    if len(parts) == 3:
+                        tree.insert("", "end", values=parts)
+        except FileNotFoundError:
+            tree.insert("", "end", values=("No logs found", "", ""))
+
+        tree.place(x=70, y=100)  
+        
+        btn = ButtonConfig()
+        btn.create_button(8, 2, self, 700, 50, "BACK", "#211C84", "#ffffff", self.show_selection_screen)
+   
+    def log_event(self,log_type, result):
+        file_path= "logs.txt"
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as file:
+                file.write("Date/Time\tType\tResult\n")
+
+        current_time = datetime.datetime.now().strftime("%m/%d/%Y %I:%M %p")
+        with open(file_path, "a") as file:
+            file.write(f"{current_time}\t{log_type}\t{result}\n")
+
     def show_start_screen(self):
         self.clear_canvas()
         # Display background image
@@ -176,6 +217,7 @@ class BMICalculator(tk.Tk):
         btn.create_button(20, 2, self, 400, 190, "HEIGHT", "#211C84", "#ffffff", lambda: self.show_height_intro(1))
         btn.create_button(20, 2, self, 400, 110, "BMI", "#211C84", "#ffffff", self.show_bmi_screen)
         btn.create_button(20, 2, self, 400, 350, "TEMPERATURE", "#211C84", "#ffffff", self.show_temperature_intro)
+        btn.create_button(8, 2, self, 650, 110, "LOGS", "#211C84", "#ffffff", self.show_logs)
 
     def clear_canvas(self):
         # Clear all widgets from the canvas
@@ -358,6 +400,7 @@ class BMICalculator(tk.Tk):
         weight_label = tk.Label(self, text=f"{weight}kg", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         weight_label.place(x=390, y=180, anchor="center") 
         if parameter == 1:
+            self.log_event("Weight",self.weight+" kg")
             self.after(3000, lambda: self.show_start_screen())
         else:
             btn = ButtonConfig()
@@ -381,6 +424,8 @@ class BMICalculator(tk.Tk):
         _label.place(x=350, y=180, anchor="center")
         _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         _label_result.place(x=350, y=300, anchor="center")
+        self.log_event("BMI", f"BMI is: {bmi_value:.2f} Age: {self.age} Gender: {self.gender} Height: {self.height} Weight: {self.weight}")
+        
         self.after(3000, lambda: self.show_start_screen())
 
     def show_height_display(self, parameter, height):
@@ -392,6 +437,7 @@ class BMICalculator(tk.Tk):
         height_label = tk.Label(self, text=f"{height:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         height_label.place(x=390, y=180, anchor="center") 
         if parameter == 1:
+            self.log_event("Height",self.height+" cm")
             self.after(3000, lambda: self.show_start_screen())
         else:
             btn = ButtonConfig()
