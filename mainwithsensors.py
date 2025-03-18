@@ -370,7 +370,10 @@ class BMICalculator(tk.Tk):
 
         #             distance = measure_distance()
         #             height = 213 - (distance * .01)
-        self.height = f"{new_height:.2f}"
+        try:
+            self.height = f"{float(new_height):.2f}"
+        except ValueError:
+            self.height = "0.00"
         #             self.retries +=1
         self.after(2000, lambda: self.show_height_display(parameter, self.height))
         #            # GPIO.cleanup()
