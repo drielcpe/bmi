@@ -183,7 +183,7 @@ class BMICalculator(tk.Tk):
                     parts = line.strip().split("\t") 
                     if len(parts) == 3:
                         try:
-                            log_datetime = datetime.strptime(parts[0], "%m/%d/%Y %I:%M %p")  
+                            log_datetime = datetime.datetime.strptime(parts[0], "%m/%d/%Y %I:%M %p")  
                             logs.append((log_datetime, parts[1], parts[2]))
                         except ValueError:
                             continue 
