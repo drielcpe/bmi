@@ -370,13 +370,14 @@ class BMICalculator(tk.Tk):
             print(self.weight)
             print(self.height)
             _label = tk.Label(self, text=f"BMI = {float(self.weight)} kg / ({float(self.height*0.01)}m)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
+            _label.place(x=400, y=180, anchor="center")
         except:
             if self.height == 0 or not self.height:
                 _label = tk.Label(self, text=f"Error in gathering height", padx=30, pady=15, bg="#211C84", fg="#ffffff")
             elif self.weight == 0 or not self.weight:
                 _label = tk.Label(self, text=f"Error in gathering weight", padx=30, pady=15, bg="#211C84", fg="#ffffff")
             self.after(3000, lambda: self.show_start_screen())
-        _label.place(x=400, y=180, anchor="center")
+        
         self.after(2000, self.show_bmi_result)
 
     def show_bmi_result(self):
