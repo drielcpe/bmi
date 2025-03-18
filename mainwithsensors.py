@@ -364,7 +364,7 @@ class BMICalculator(tk.Tk):
         # Display background image
         self.canvas.create_image(400, 225, image=self.background_image)
 
-        _label = tk.Label(self, text=f"BMI = {self.weight}kg / ({self.height*0.01}m)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
+        _label = tk.Label(self, text=f"BMI = {self.weight} kg / ({self.height*0.01}m)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
         _label.place(x=400, y=180, anchor="center")
         self.after(2000, self.show_bmi_result)
 
