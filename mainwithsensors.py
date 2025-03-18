@@ -469,16 +469,17 @@ class BMICalculator(tk.Tk):
         _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         _label_result.place(x=350, y=300, anchor="center")
         self.log_event("BMI", f"BMI is: {bmi_value:.2f} Age: {self.age} Gender: {self.gender} Height: {self.height} Weight: {self.weight}")
-        
-        self.after(3000, lambda: self.show_start_screen())
+         
+        self.after(3000, lambda: self.show_start_screen()) 
 
     def show_height_display(self, parameter, height):
         self.clear_canvas()
         # Display background image
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
+        self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
-        height_label = tk.Label(self, text=f"{height:.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
+        height_label = tk.Label(self, text=f"{float(height):.2f} cm", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         height_label.place(x=390, y=180, anchor="center") 
         if parameter == 1:
             self.log_event("Height",self.height+" cm")
