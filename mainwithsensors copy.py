@@ -19,9 +19,7 @@ from hx711 import HX711
 # Initialize GPIO
 GPIO.setmode(GPIO.BCM)  # Use BCM pin numbering
 GPIO.setwarnings(False)  # Disable GPIO warnings
-TRIG = 23
-ECHO = 24
-SPEED_OF_SOUND = 34300
+
 class DirectoryHelper:
     @staticmethod
     def get_current_working_directory():
@@ -70,7 +68,6 @@ class BMICalculator(tk.Tk):
         self.gender = None
         self.height = None
         self.weight = None
-        self.retries = 0
         self.configure(bg="black")
         self.overrideredirect(1)
         self.window_init()
@@ -268,66 +265,58 @@ class BMICalculator(tk.Tk):
 
     def show_height_gathering(self, parameter):
         self.clear_canvas()
+        # Display background image
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
-        try:
-           
-            GPIO.setup(TRIG, GPIO.OUT)
-            GPIO.setup(ECHO, GPIO.IN)
+        # Hardcoded height value
+        TRIG = 23
+        ECHO = 24
+        SPEED_OF_SOUND = 34300
+        GPIO.setup(TRIG, GPIO.OUT)
+        GPIO.setup(ECHO, GPIO.IN)
+        GPIO.output(TRIG, False)
+
+        def measure_distance():
+            GPIO.output(TRIG, True)
+            time.sleep(0.00001)
             GPIO.output(TRIG, False)
 
-            def measure_distance():
-                GPIO.output(TRIG, True)
+            while GPIO.input(ECHO) == 0:
+                pulse_start = time.time()
+
+            while GPIO.input(ECHO) == 1:
+                pulse_end = time.time()
+
+            pulse_duration = pulse_end - pulse_start
+            distance = (pulse_duration * SPEED_OF_SOUND) / 2
+            return round(distance, 2)
+
+        def gather_data():
+            results = []
+            for _ in range(5):
+                distance = measure_distance()
+                if distance >= 213:
+                    continue
+                results.append(distance)
                 time.sleep(0.00001)
-                GPIO.output(TRIG, False)
 
-                while GPIO.input(ECHO) == 0:
-                    pulse_start = time.time()
+            integer_results = [int(d) for d in results]
+            counter = Counter(integer_results)
+            valid_integers = [k for k, v in counter.items() if v >= 2]
 
-                while GPIO.input(ECHO) == 1:
-                    pulse_end = time.time()
-
-                pulse_duration = pulse_end - pulse_start
-                distance = (pulse_duration * SPEED_OF_SOUND) / 2
-                if distance < 2 or distance > 400:  # Assuming sensor range is 2cm to 400cm
-                    raise ValueError("Out of range measurement")
-                return round(distance, 2)
-    
-        except:
-            if self.retries!=3:
-                self.show_height_gathering(self, parameter)
-
-        distance = measure_distance()
-        height = 213 - (distance * .01)
-        self.height = f"{height:.2f}"
-        self.retries +=1
-        self.after(2000, lambda: self.show_height_display(parameter, height))
-        # def gather_data():
-        #     results = []
-        #     for _ in range(5):
-        #         distance = measure_distance()
-        #         if distance >= 213:
-        #             continue
-        #         results.append(distance)
-        #         time.sleep(0.00001)
-
-        #     integer_results = [int(d) for d in results]
-        #     counter = Counter(integer_results)
-        #     valid_integers = [k for k, v in counter.items() if v >= 2]
-
-        #     if valid_integers:
-        #         selected_integer = valid_integers[0]
-        #         filtered_results = [d for d in results if int(d) == selected_integer]
-        #         average_distance = round(sum(filtered_results) / len(filtered_results), 2)
-        #         height = 213 - (average_distance * .01)
-        #         self.height = f"{height:.2f}"
-        #         self.after(2000, lambda: self.show_height_display(parameter, height))
-        #             #GPIO.cleanup()
-        #     else:
-        #         print("No valid measurement found. Retrying...")
-        #         self.after(1000, gather_data) 
-        # threading.Thread(target=gather_data).start()
+            if valid_integers:
+                selected_integer = valid_integers[0]
+                filtered_results = [d for d in results if int(d) == selected_integer]
+                average_distance = round(sum(filtered_results) / len(filtered_results), 2)
+                height = 213 - (average_distance * .01)
+                self.height = f"{height:.2f}"
+                self.after(2000, lambda: self.show_height_display(parameter, height))
+                    #GPIO.cleanup()
+            else:
+                print("No valid measurement found. Retrying...")
+                self.after(1000, gather_data) 
+        threading.Thread(target=gather_data).start()
 
     def show_weight_gathering(self, parameter):
         self.clear_canvas()
