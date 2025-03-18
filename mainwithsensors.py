@@ -176,7 +176,6 @@ class BMICalculator(tk.Tk):
 
         tree.heading("Result", text="Result")
         tree.column("Result", width=350, anchor="w") 
-
         try:
             with open("logs.txt", "r") as file:
                 for line in file:
@@ -195,7 +194,7 @@ class BMICalculator(tk.Tk):
         except FileNotFoundError:
             tree.insert("", "end", values=("No logs found", "", ""))
 
-        tree.place(x=70, y=100)  
+        tree.place(x=70, y=100,height=300)  
         
         btn = ButtonConfig()
         btn.create_button(8, 2, self, 700, 50, "BACK", "#211C84", "#ffffff", self.show_selection_screen)
