@@ -389,7 +389,7 @@ class BMICalculator(tk.Tk):
         _label.place(x=350, y=180, anchor="center")
         _label_result = tk.Label(self, text=f"{status}", font=("Arial", 25, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         _label_result.place(x=350, y=300, anchor="center")
-        self.log_event("BMI", f"BMI is: {bmi_value:.2f} Age: {self.age} Gender: {self.gender} Height: {self.height} Weight: {self.weight}")
+        self.log_event("BMI", f"BMI is: {bmi_value:.2f}-{status} Age: {self.age} Sex: {self.gender} H: {self.height} W: {self.weight}")
          
         self.after(8000, lambda: self.show_start_screen()) 
 
