@@ -295,17 +295,18 @@ class BMICalculator(tk.Tk):
                         raise ValueError("Out of range measurement")
                     return round(distance, 2)
                 except:
+                    
                     print("failed")
-    
+            distance = measure_distance()
+            height = 213 - (distance * .01)
+            self.height = f"{height:.2f}"
+            self.retries +=1
+            self.after(2000, lambda: self.show_height_display(parameter, height))
         except:
             if self.retries!=3:
                 self.show_height_gathering(self, parameter)
 
-        distance = measure_distance()
-        height = 213 - (distance * .01)
-        self.height = f"{height:.2f}"
-        self.retries +=1
-        self.after(2000, lambda: self.show_height_display(parameter, height))
+   
         # def gather_data():
         #     results = []
         #     for _ in range(5):
