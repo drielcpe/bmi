@@ -326,7 +326,7 @@ class BMICalculator(tk.Tk):
         if new_height:
             try:
                 self.height = f"{float(new_height):.2f}"
-                self.log_event("Height",self.height+" cm")
+                
             except ValueError:
                 self.height = "0.00"
             self.after(2000, lambda: self.show_height_display(parameter, self.height))
