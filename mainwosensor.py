@@ -200,7 +200,7 @@ class BMICalculator(tk.Tk):
         except FileNotFoundError:
             tree.insert("", "end", values=("No logs found", "", ""))
 
-        tree.place(x=70, y=100)  # Adjust placement as needed
+        tree.place(x=70, y=100)  
         
         btn = ButtonConfig()
         btn.create_button(8, 2, self, 700, 50, "BACK", "#211C84", "#ffffff", self.show_selection_screen)

@@ -455,6 +455,7 @@ class BMICalculator(tk.Tk):
         temperature = 0.9844 * mlx.object_temperature + 3.8967
         self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=190)
+        self.log_event("Temperature",f"{temperature:.2f} °C")
         temp_label = tk.Label(self, text=f"{temperature:.2f} °C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
         temp_label.place(x=390, y=180, anchor="center")
         self.after(3000, lambda: self.show_start_screen())
