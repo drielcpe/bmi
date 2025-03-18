@@ -161,6 +161,7 @@ class BMICalculator(tk.Tk):
             self.gif_callback = self.after(100, self.animate_gif, frames, frame_index)
 
     def show_logs(self):
+        logs = []
         self.clear_canvas()
         self.canvas.create_image(400, 225, image=self.background_image)
 
@@ -181,7 +182,16 @@ class BMICalculator(tk.Tk):
                 for line in file:
                     parts = line.strip().split("\t") 
                     if len(parts) == 3:
-                        tree.insert("", "end", values=parts)
+                        try:
+                            log_datetime = datetime.strptime(parts[0], "%m/%d/%Y %I:%M %p")  
+                            logs.append((log_datetime, parts[1], parts[2]))
+                        except ValueError:
+                            continue 
+            logs.sort(reverse=True, key=lambda x: x[0])
+            for log in logs:
+                tree.insert("", "end", values=(log[0].strftime("%m/%d/%Y %I:%M %p"), log[1], log[2]))
+
+                       # tree.insert("", "end", values=parts)
         except FileNotFoundError:
             tree.insert("", "end", values=("No logs found", "", ""))
 
