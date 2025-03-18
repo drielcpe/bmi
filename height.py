@@ -43,7 +43,7 @@ def gather_height():
                 continue
             results.append(distance)
             print(f"Measurement {len(results)}: {distance} cm")
-            time.sleep(1)
+            time.sleep(000.2)
 
         integer_results = [int(d) for d in results]
 
