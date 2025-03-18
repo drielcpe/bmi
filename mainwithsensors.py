@@ -314,7 +314,7 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         new_height = height.gather_height()
-        self.log_event("Height",self.weight+" cm")
+        self.log_event("Height",self.height+" cm")
         # try:
            
         #     GPIO.setup(TRIG, GPIO.OUT)
