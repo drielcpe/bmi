@@ -378,7 +378,7 @@ class BMICalculator(tk.Tk):
                 _label = tk.Label(self, text=f"Error in gathering weight", padx=30, pady=15, bg="#211C84", fg="#ffffff")
             self.after(3000, lambda: self.show_start_screen())
         
-        self.after(2000, self.show_bmi_result)
+        self.after(4000, self.show_bmi_result)
 
     def show_bmi_result(self):
         self.clear_canvas()
@@ -391,7 +391,7 @@ class BMICalculator(tk.Tk):
         _label_result.place(x=350, y=300, anchor="center")
         self.log_event("BMI", f"BMI is: {bmi_value:.2f} Age: {self.age} Gender: {self.gender} Height: {self.height} Weight: {self.weight}")
          
-        self.after(6000, lambda: self.show_start_screen()) 
+        self.after(8000, lambda: self.show_start_screen()) 
 
     def show_height_display(self, parameter, height):
         self.clear_canvas()
