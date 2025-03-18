@@ -416,15 +416,20 @@ class BMICalculator(tk.Tk):
         self.clear_canvas()
         # Display background image
         self.canvas.create_image(400, 225, image=self.background_image)
-        i2c = io.I2C(board.SCL, board.SDA, frequency=100000)
-        mlx = adafruit_mlx90614.MLX90614(i2c)
-        temperature = 0.9844 * mlx.object_temperature + 3.8967
-        self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
-        self.gathering_label.pack(pady=190)
-        self.log_event("Temperature",f"{temperature:.2f} °C")
-        temp_label = tk.Label(self, text=f"{temperature:.2f} °C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
-        temp_label.place(x=390, y=180, anchor="center")
-        self.after(3000, lambda: self.show_start_screen())
+        try:
+            i2c = io.I2C(board.SCL, board.SDA, frequency=100000)
+            mlx = adafruit_mlx90614.MLX90614(i2c)
+            temperature = 0.9844 * mlx.object_temperature + 3.8967
+            self.gathering_label = tk.Label(self, text="TEMPERATURE", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
+            self.gathering_label.pack(pady=190)
+            self.log_event("Temperature",f"{temperature:.2f} °C")
+            temp_label = tk.Label(self, text=f"{temperature:.2f} °C", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
+            temp_label.place(x=390, y=180, anchor="center")
+            self.after(3000, lambda: self.show_start_screen())
+        except:
+            temp_label = tk.Label(self, text="Temprature sensor is not working.. ", font=("Arial", 50, "bold"), padx=50, pady=15, bg="#211C84", fg="#ffffff")
+            temp_label.place(x=390, y=180, anchor="center")
+            self.after(3000, lambda: self.show_start_screen())
 
     def check_enable_next_button(self):
         if self.age is None and self.gender is None:
