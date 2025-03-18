@@ -347,7 +347,7 @@ class BMICalculator(tk.Tk):
                         continue
                     results.append(distance)
                     print(f"Measurement {len(results)}: {distance} cm")
-                    time.sleep(1)
+                    time.sleep(0.05)
 
                 integer_results = [int(d) for d in results]
 
