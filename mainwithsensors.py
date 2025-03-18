@@ -413,7 +413,7 @@ class BMICalculator(tk.Tk):
         try:
             _label = tk.Label(self, text=f"BMI = {self.weight} kg / ({self.height*0.01}m)²", font=("Arial", 35, "bold"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
         except:
-            _label = tk.Label(self, text=f"Error in gathering return to home page"), padx=30, pady=15, bg="#211C84", fg="#ffffff")
+            _label = tk.Label(self, text=f"Error in gathering return to home page", padx=30, pady=15, bg="#211C84", fg="#ffffff")
             self.after(3000, lambda: self.show_start_screen())
         _label.place(x=400, y=180, anchor="center")
         self.after(2000, self.show_bmi_result)
