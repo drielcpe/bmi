@@ -7,8 +7,8 @@ def gather_height():
     ECHO = 24
     SPEED_OF_SOUND = 34300
 
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
+    #GPIO.setmode(GPIO.BCM)
+    #GPIO.setwarnings(False)
     GPIO.setup(TRIG, GPIO.OUT)
     GPIO.setup(ECHO, GPIO.IN)
     GPIO.output(TRIG, False)
@@ -30,7 +30,7 @@ def gather_height():
         return round(distance, 2)
 
     print("Waiting for the sensor to settle")
-    time.sleep(2)
+    time.sleep(1)
 
     while True:
         results = []
@@ -56,15 +56,16 @@ def gather_height():
 
             # Check if the average distance is within the valid range (40 cm to 200 cm)
           
-            height = 207.7 - average_distance
+            height = 213 - average_distance
             print(f"Height: {height} cm")
-            GPIO.cleanup()
-            return {
-                "height": f"{height} cm"
-            }
+           # GPIO.cleanup()
+            return height
+            # return {
+            #     "height": f"{height} cm"
+            # }
           
         else:
             print("No two measurements share the same integer. Re-gathering...")
 
 # Call the function
-gather_height()
+#gather_height()

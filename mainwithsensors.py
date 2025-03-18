@@ -16,7 +16,7 @@ import board
 import busio as io
 import adafruit_mlx90614
 from hx711 import HX711
-
+import height
 # Initialize GPIO
 GPIO.setmode(GPIO.BCM)  # Use BCM pin numbering
 GPIO.setwarnings(False)  # Disable GPIO warnings
@@ -313,76 +313,78 @@ class BMICalculator(tk.Tk):
         self.canvas.create_image(400, 225, image=self.background_image)
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
-        try:
+        new_height = height.gather_height()
+
+        # try:
            
-            GPIO.setup(TRIG, GPIO.OUT)
-            GPIO.setup(ECHO, GPIO.IN)
-            GPIO.output(TRIG, False)
+        #     GPIO.setup(TRIG, GPIO.OUT)
+        #     GPIO.setup(ECHO, GPIO.IN)
+        #     GPIO.output(TRIG, False)
 
-            def measure_distance():
-                try:
-                    GPIO.output(TRIG, True)
-                    time.sleep(0.00001)
-                    GPIO.output(TRIG, False)
+        #     def measure_distance():
+        #         try:
+        #             GPIO.output(TRIG, True)
+        #             time.sleep(0.00001)
+        #             GPIO.output(TRIG, False)
 
-                    while GPIO.input(ECHO) == 0:
-                        pulse_start = time.time()
+        #             while GPIO.input(ECHO) == 0:
+        #                 pulse_start = time.time()
 
-                    while GPIO.input(ECHO) == 1:
-                        pulse_end = time.time()
+        #             while GPIO.input(ECHO) == 1:
+        #                 pulse_end = time.time()
 
-                    pulse_duration = pulse_end - pulse_start
-                    distance = (pulse_duration * SPEED_OF_SOUND) / 2
-                    if distance < 2 or distance > 400:  # Assuming sensor range is 2cm to 400cm
-                        raise ValueError("Out of range measurement")
-                    return round(distance, 2)
-                except:
-                    print("failed")
+        #             pulse_duration = pulse_end - pulse_start
+        #             distance = (pulse_duration * SPEED_OF_SOUND) / 2
+        #             if distance < 2 or distance > 400:  # Assuming sensor range is 2cm to 400cm
+        #                 raise ValueError("Out of range measurement")
+        #             return round(distance, 2)
+        #         except:
+        #             print("failed")
 
-            while True:
-                results = []
-                for _ in range(5):
-                    distance = measure_distance()
-                    if distance >= 214:
-                        continue
-                    results.append(distance)
-                    print(f"Measurement {len(results)}: {distance} cm")
-                    time.sleep(0.05)
+        #     while True:
+        #         results = []
+        #         for _ in range(5):
+        #             distance = measure_distance()
+        #             if distance >= 214:
+        #                 continue
+        #             results.append(distance)
+        #             print(f"Measurement {len(results)}: {distance} cm")
+        #             time.sleep(0.05)
 
-                integer_results = [int(d) for d in results]
+        #         integer_results = [int(d) for d in results]
 
-                counter = Counter(integer_results)
+        #         counter = Counter(integer_results)
 
-                valid_integers = [k for k, v in counter.items() if v >= 2]
+        #         valid_integers = [k for k, v in counter.items() if v >= 2]
 
-                if valid_integers:
-                    selected_integer = valid_integers[0]
-                    filtered_results = [d for d in results if int(d) == selected_integer]
-                    average_distance = round(sum(filtered_results) / len(filtered_results), 2)
-                    print(f"Average distance for integer {selected_integer}: {average_distance} cm")
+        #         if valid_integers:
+        #             selected_integer = valid_integers[0]
+        #             filtered_results = [d for d in results if int(d) == selected_integer]
+        #             average_distance = round(sum(filtered_results) / len(filtered_results), 2)
+        #             print(f"Average distance for integer {selected_integer}: {average_distance} cm")
 
-                    # Check if the average distance is within the valid range (40 cm to 200 cm)
+        #             # Check if the average distance is within the valid range (40 cm to 200 cm)
                 
-                    height = 207.7 - average_distance
-                    print(f"Height: {height} cm")
+        #             height = 207.7 - average_distance
+        #             print(f"Height: {height} cm")
 
-                    distance = measure_distance()
-                    height = 213 - (distance * .01)
-                    self.height = f"{height:.2f}"
-                    self.retries +=1
-                    self.after(2000, lambda: self.show_height_display(parameter, height))
-                   # GPIO.cleanup()
-                    return {
-                        "height": f"{height} cm"
-                    }
+        #             distance = measure_distance()
+        #             height = 213 - (distance * .01)
+        self.height = f"{new_height:.2f}"
+        #             self.retries +=1
+        self.after(2000, lambda: self.show_height_display(parameter, self.height))
+        #            # GPIO.cleanup()
+        #             return {
+        #                 "height": f"{height} cm"
+        #             }
                 
-                else:
-                    print("No two measurements share the same integer. Re-gathering...")
+        #         else:
+        #             print("No two measurements share the same integer. Re-gathering...")
 
          
-        except:
-            if self.retries!=3:
-                self.show_height_gathering(self, parameter)
+        # except:
+        #     if self.retries!=3:
+        #         self.show_height_gathering(self, parameter)
 
    
         # def gather_data():
