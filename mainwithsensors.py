@@ -314,7 +314,8 @@ class BMICalculator(tk.Tk):
         self.gathering_label = tk.Label(self, text="Height received...", font=("Arial", 20, "bold"), bg="#211C84", fg="#ffffff")
         self.gathering_label.pack(pady=150)
         new_height = height.gather_height()
-        self.log_event("Height",self.height+" cm")
+        if new_height:
+           
         # try:
            
         #     GPIO.setup(TRIG, GPIO.OUT)
@@ -370,12 +371,13 @@ class BMICalculator(tk.Tk):
 
         #             distance = measure_distance()
         #             height = 213 - (distance * .01)
-        try:
-            self.height = f"{float(new_height):.2f}"
-        except ValueError:
-            self.height = "0.00"
-        #             self.retries +=1
-        self.after(2000, lambda: self.show_height_display(parameter, self.height))
+            try:
+                self.height = f"{float(new_height):.2f}"
+                self.log_event("Height",self.height+" cm")
+            except ValueError:
+                self.height = "0.00"
+            #             self.retries +=1
+            self.after(2000, lambda: self.show_height_display(parameter, self.height))
         #            # GPIO.cleanup()
         #             return {
         #                 "height": f"{height} cm"
