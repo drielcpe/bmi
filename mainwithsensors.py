@@ -337,13 +337,49 @@ class BMICalculator(tk.Tk):
                         raise ValueError("Out of range measurement")
                     return round(distance, 2)
                 except:
-                    
                     print("failed")
-            distance = measure_distance()
-            height = 213 - (distance * .01)
-            self.height = f"{height:.2f}"
-            self.retries +=1
-            self.after(2000, lambda: self.show_height_display(parameter, height))
+
+            while True:
+                results = []
+                for _ in range(5):
+                    distance = measure_distance()
+                    if distance >= 214:
+                        continue
+                    results.append(distance)
+                    print(f"Measurement {len(results)}: {distance} cm")
+                    time.sleep(1)
+
+                integer_results = [int(d) for d in results]
+
+                counter = Counter(integer_results)
+
+                valid_integers = [k for k, v in counter.items() if v >= 2]
+
+                if valid_integers:
+                    selected_integer = valid_integers[0]
+                    filtered_results = [d for d in results if int(d) == selected_integer]
+                    average_distance = round(sum(filtered_results) / len(filtered_results), 2)
+                    print(f"Average distance for integer {selected_integer}: {average_distance} cm")
+
+                    # Check if the average distance is within the valid range (40 cm to 200 cm)
+                
+                    height = 207.7 - average_distance
+                    print(f"Height: {height} cm")
+
+                    distance = measure_distance()
+                    height = 213 - (distance * .01)
+                    self.height = f"{height:.2f}"
+                    self.retries +=1
+                    self.after(2000, lambda: self.show_height_display(parameter, height))
+                   # GPIO.cleanup()
+                    return {
+                        "height": f"{height} cm"
+                    }
+                
+                else:
+                    print("No two measurements share the same integer. Re-gathering...")
+
+         
         except:
             if self.retries!=3:
                 self.show_height_gathering(self, parameter)
